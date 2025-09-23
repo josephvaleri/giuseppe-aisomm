@@ -424,7 +424,10 @@ export default function HomePageContent() {
                                 <div className="flex gap-1">
                                   <button
                                     type="button"
-                                    onClick={() => {
+                                    onMouseDown={(e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
                                       console.log('Thumbs up clicked for answer:', answer.id, 'qaId:', answer.qaId)
                                       console.log('Current feedback state:', feedback)
                                       handleFeedback(answer.id, true, answer.qaId)
@@ -440,7 +443,10 @@ export default function HomePageContent() {
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => {
+                                    onMouseDown={(e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
                                       console.log('Thumbs down clicked for answer:', answer.id, 'qaId:', answer.qaId)
                                       console.log('Current feedback state:', feedback)
                                       handleFeedback(answer.id, false, answer.qaId)
