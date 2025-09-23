@@ -31,8 +31,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update feedback' }, { status: 500 })
     }
 
-    // If thumbs down, create moderation item if it doesn't exist
+    // Handle moderation queue based on feedback
     if (!thumbsUp) {
+      // If thumbs down, create moderation item if it doesn't exist
       const { data: existingModeration } = await supabase
         .from('moderation_items')
         .select('item_id')
@@ -40,12 +41,27 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (!existingModeration) {
-        await supabase
+        const { error: insertError } = await supabase
           .from('moderation_items')
           .insert({
             qa_id: qaId,
             status: 'pending'
           })
+        
+        if (insertError) {
+          console.error('Failed to create moderation item:', insertError)
+        }
+      }
+    } else {
+      // If thumbs up, remove from moderation queue (no longer needs review)
+      const { error: deleteError } = await supabase
+        .from('moderation_items')
+        .delete()
+        .eq('qa_id', qaId)
+        .eq('status', 'pending')
+      
+      if (deleteError) {
+        console.error('Failed to remove moderation item:', deleteError)
       }
     }
 

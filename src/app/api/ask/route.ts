@@ -181,6 +181,18 @@ export async function POST(request: NextRequest) {
             output: { routeScore, chosenRoute: source }
           }
         ])
+
+      // Automatically add new Q&A record to moderation queue (since thumbs_up starts as NULL)
+      const { error: moderationError } = await supabase
+        .from('moderation_items')
+        .insert({
+          qa_id: qaRecord.qa_id,
+          status: 'pending'
+        })
+
+      if (moderationError) {
+        console.error('Failed to create moderation item for new Q&A:', moderationError)
+      }
     }
 
     return NextResponse.json({

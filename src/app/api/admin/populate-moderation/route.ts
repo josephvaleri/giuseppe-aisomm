@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,68 +13,73 @@ export async function POST(request: NextRequest) {
     // Check if user is admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role_id')
       .eq('user_id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || profile.role_id !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Get all questions_answers entries that have thumbs_up = false but no moderation item
-    const { data: qaEntries, error: qaError } = await supabase
+    // Find all Q&A records with NULL thumbs_up that don't have moderation items
+    const { data: qaRecords, error: qaError } = await supabase
       .from('questions_answers')
-      .select('qa_id, question, answer, thumbs_up')
-      .eq('thumbs_up', false)
+      .select('qa_id')
+      .is('thumbs_up', null)
 
     if (qaError) {
-      console.error('Error fetching Q&A entries:', qaError)
-      return NextResponse.json({ error: 'Failed to fetch Q&A entries' }, { status: 500 })
+      console.error('QA query error:', qaError)
+      return NextResponse.json({ error: 'Failed to query QA data' }, { status: 500 })
     }
 
-    if (!qaEntries || qaEntries.length === 0) {
+    if (!qaRecords || qaRecords.length === 0) {
       return NextResponse.json({ 
-        message: 'No negative feedback entries found to moderate',
+        message: 'No Q&A records with NULL feedback found',
         count: 0
       })
     }
 
     // Check which ones already have moderation items
-    const qaIds = qaEntries.map(qa => qa.qa_id)
-    const { data: existingModeration } = await supabase
+    const qaIds = qaRecords.map(record => record.qa_id)
+    const { data: existingModeration, error: moderationError } = await supabase
       .from('moderation_items')
       .select('qa_id')
       .in('qa_id', qaIds)
 
-    const existingQaIds = new Set(existingModeration?.map(m => m.qa_id) || [])
-    const newModerationItems = qaEntries
-      .filter(qa => !existingQaIds.has(qa.qa_id))
-      .map(qa => ({
-        qa_id: qa.qa_id,
-        status: 'pending' as const,
-        created_at: new Date().toISOString()
-      }))
+    if (moderationError) {
+      console.error('Moderation query error:', moderationError)
+      return NextResponse.json({ error: 'Failed to query moderation data' }, { status: 500 })
+    }
 
-    if (newModerationItems.length === 0) {
+    const existingQaIds = existingModeration?.map(item => item.qa_id) || []
+    const newQaIds = qaIds.filter(qaId => !existingQaIds.includes(qaId))
+
+    if (newQaIds.length === 0) {
       return NextResponse.json({ 
-        message: 'All negative feedback entries already have moderation items',
+        message: 'All Q&A records with NULL feedback already have moderation items',
         count: 0
       })
     }
 
     // Insert new moderation items
+    const moderationItems = newQaIds.map(qaId => ({
+      qa_id: qaId,
+      status: 'pending'
+    }))
+
     const { error: insertError } = await supabase
       .from('moderation_items')
-      .insert(newModerationItems)
+      .insert(moderationItems)
 
     if (insertError) {
-      console.error('Error inserting moderation items:', insertError)
+      console.error('Insert error:', insertError)
       return NextResponse.json({ error: 'Failed to insert moderation items' }, { status: 500 })
     }
 
     return NextResponse.json({ 
-      message: `Successfully created ${newModerationItems.length} moderation items`,
-      count: newModerationItems.length
+      message: `Successfully added ${newQaIds.length} items to moderation queue`,
+      count: newQaIds.length,
+      qaIds: newQaIds
     })
 
   } catch (error) {
