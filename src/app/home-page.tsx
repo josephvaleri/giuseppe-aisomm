@@ -420,7 +420,7 @@ export default function HomePageContent() {
                               <div className="flex items-center gap-2 pt-2 border-t border-amber-200">
                                 <span className="text-sm text-amber-600">Was this helpful?</span>
                                 <span className="text-xs text-gray-500">(ID: {answer.qaId})</span>
-                                {console.log('Rendering feedback buttons for answer:', answer.id, 'qaId:', answer.qaId, 'feedback state:', feedback[answer.id])}
+                                {console.log('Rendering feedback buttons for answer:', answer.id, 'qaId:', answer.qaId, 'feedback state:', feedback[answer.id], 'isDisabled:', (feedback[answer.id] === true || feedback[answer.id] === false))}
                                 <div className="flex gap-1">
                                   <button
                                     type="button"
@@ -432,12 +432,12 @@ export default function HomePageContent() {
                                       console.log('Current feedback state:', feedback)
                                       handleFeedback(answer.id, true, answer.qaId)
                                     }}
-                                    disabled={feedback[answer.id] !== null}
+                                    disabled={feedback[answer.id] === true || feedback[answer.id] === false}
                                     className={`h-8 w-8 p-0 rounded border flex items-center justify-center ${
                                       feedback[answer.id] === true 
                                         ? 'bg-amber-600 text-white border-amber-600' 
                                         : 'bg-white text-amber-600 border-amber-300 hover:bg-amber-50'
-                                    } ${feedback[answer.id] !== null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    } ${(feedback[answer.id] === true || feedback[answer.id] === false) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                   >
                                     <ThumbsUp className="w-4 h-4" />
                                   </button>
@@ -451,12 +451,12 @@ export default function HomePageContent() {
                                       console.log('Current feedback state:', feedback)
                                       handleFeedback(answer.id, false, answer.qaId)
                                     }}
-                                    disabled={feedback[answer.id] !== null}
+                                    disabled={feedback[answer.id] === true || feedback[answer.id] === false}
                                     className={`h-8 w-8 p-0 rounded border flex items-center justify-center ${
                                       feedback[answer.id] === false 
                                         ? 'bg-red-600 text-white border-red-600' 
                                         : 'bg-white text-red-600 border-red-300 hover:bg-red-50'
-                                    } ${feedback[answer.id] !== null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    } ${(feedback[answer.id] === true || feedback[answer.id] === false) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                   >
                                     <ThumbsDown className="w-4 h-4" />
                                   </button>
