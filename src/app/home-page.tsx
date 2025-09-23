@@ -171,18 +171,35 @@ export default function HomePageContent() {
   }
 
   const handleFeedback = async (answerId: string, thumbsUp: boolean, qaId?: number) => {
-    if (!qaId) return
+    console.log('handleFeedback called:', { answerId, thumbsUp, qaId })
+    
+    if (!qaId) {
+      console.error('No qaId provided for feedback')
+      return
+    }
 
+    // Update UI immediately
     setFeedback(prev => ({ ...prev, [answerId]: thumbsUp }))
 
     try {
-      await fetch('/api/feedback', {
+      const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ qaId, thumbsUp }),
       })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Feedback API error:', errorData)
+        setFeedback(prev => ({ ...prev, [answerId]: null }))
+        return
+      }
+
+      const result = await response.json()
+      console.log('Feedback submitted successfully:', result)
     } catch (error) {
       console.error('Error submitting feedback:', error)
       setFeedback(prev => ({ ...prev, [answerId]: null }))
@@ -406,7 +423,12 @@ export default function HomePageContent() {
                                   <Button
                                     size="sm"
                                     variant={feedback[answer.id] === true ? 'default' : 'outline'}
-                                    onClick={() => handleFeedback(answer.id, true, answer.qaId)}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      console.log('Thumbs up clicked for answer:', answer.id, 'qaId:', answer.qaId)
+                                      handleFeedback(answer.id, true, answer.qaId)
+                                    }}
                                     disabled={feedback[answer.id] !== null}
                                     className="h-8 w-8 p-0"
                                   >
@@ -415,7 +437,12 @@ export default function HomePageContent() {
                                   <Button
                                     size="sm"
                                     variant={feedback[answer.id] === false ? 'destructive' : 'outline'}
-                                    onClick={() => handleFeedback(answer.id, false, answer.qaId)}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      console.log('Thumbs down clicked for answer:', answer.id, 'qaId:', answer.qaId)
+                                      handleFeedback(answer.id, false, answer.qaId)
+                                    }}
                                     disabled={feedback[answer.id] !== null}
                                     className="h-8 w-8 p-0"
                                   >
