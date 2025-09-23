@@ -34,22 +34,26 @@ function ModerationPageContent() {
   const loadModerationItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('qa_pairs')
+        .from('questions_answers')
         .select(`
-          id,
+          qa_id,
           question,
           answer,
-          status,
           created_at,
-          profiles!qa_pairs_user_id_fkey(email)
+          user_id,
+          profiles!questions_answers_user_id_fkey(email)
         `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      const formattedData = data.map(item => ({
-        ...item,
-        user_email: item.profiles?.email
+      const formattedData = (data || []).map((item: any) => ({
+        id: item.qa_id,
+        question: item.question,
+        answer: item.answer,
+        status: 'pending' as const,
+        created_at: item.created_at,
+        user_email: item.profiles?.email || 'Unknown'
       }))
 
       setItems(formattedData)
@@ -68,9 +72,9 @@ function ModerationPageContent() {
       }
 
       const { error } = await supabase
-        .from('qa_pairs')
+        .from('questions_answers')
         .update(updateData)
-        .eq('id', id)
+        .eq('qa_id', id)
 
       if (error) throw error
 
@@ -101,7 +105,7 @@ function ModerationPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">                                                                                                     
         <div className="text-amber-800">Loading...</div>
       </div>
     )
@@ -193,7 +197,7 @@ function ModerationPageContent() {
                       <textarea
                         value={editedAnswer}
                         onChange={(e) => setEditedAnswer(e.target.value)}
-                        className="w-full h-32 px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                        className="w-full h-32 px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"                                                               
                       />
                     </div>
 

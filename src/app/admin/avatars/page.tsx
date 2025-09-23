@@ -277,8 +277,12 @@ function AvatarManagementContent() {
                         alt={avatar.name}
                         className="max-w-full max-h-full object-contain rounded-lg"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                          e.currentTarget.nextElementSibling!.style.display = 'flex'
+                          const target = e.currentTarget as HTMLImageElement
+                          target.style.display = 'none'
+                          const nextElement = target.nextElementSibling as HTMLElement
+                          if (nextElement) {
+                            nextElement.style.display = 'flex'
+                          }
                         }}
                       />
                       <div className="hidden items-center justify-center text-amber-600">
