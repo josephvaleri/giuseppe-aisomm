@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Mic, MicOff, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
+import GiuseppeAvatar from '@/components/GiuseppeAvatar'
+import GrapeDetail from '@/components/GrapeDetail'
+import { detectGrapeNames, getAllGrapeVarieties, createGrapeLinks, GrapeMatch } from '@/lib/grape-linking'
 
 type AvatarState = 'WAITING' | 'ANSWERING' | 'ERROR'
 
@@ -36,13 +39,26 @@ export default function HomePageContent() {
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({})
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [grapeVarieties, setGrapeVarieties] = useState<string[]>([])
+  const [selectedGrapeId, setSelectedGrapeId] = useState<number | null>(null)
   
   const recognitionRef = useRef<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
     loadAvatarUrls()
+    loadGrapeVarieties()
   }, [])
+
+  // Load grape varieties for linking
+  const loadGrapeVarieties = async () => {
+    try {
+      const varieties = await getAllGrapeVarieties()
+      setGrapeVarieties(varieties)
+    } catch (error) {
+      console.error('Error loading grape varieties:', error)
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
@@ -102,6 +118,9 @@ export default function HomePageContent() {
   const handleSubmit = async () => {
     if (!question.trim() || isLoading) return
 
+    // Reset to answers view when asking a new question
+    setSelectedGrapeId(null)
+    
     setIsLoading(true)
     setAvatarState('ANSWERING')
     
@@ -111,6 +130,7 @@ export default function HomePageContent() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ question }),
       })
 
@@ -171,7 +191,7 @@ export default function HomePageContent() {
 
   const getAvatarImage = () => {
     const stateKey = avatarState.toLowerCase() as keyof typeof avatarUrls
-    return avatarUrls[stateKey] || '/avatars/waiting.png'
+    return avatarUrls[stateKey] || '/Giuseppe_001.png'
   }
 
   const handleImageLoad = () => {
@@ -184,9 +204,36 @@ export default function HomePageContent() {
     setImageLoaded(false)
   }
 
+  // Handle grape link clicks
+  const handleGrapeClick = (grapeId: number) => {
+    setSelectedGrapeId(grapeId)
+  }
+
+  // Handle back from grape detail
+  const handleBackFromGrape = () => {
+    setSelectedGrapeId(null)
+  }
+
   const formatAnswer = (content: string) => {
+    // Detect grape names and create links
+    const grapeMatches = detectGrapeNames(content, grapeVarieties)
+    
+    // For now, we'll create a simple version without async linking
+    // The full async version would require state management for linked content
+    let linkedContent = content
+    
+    if (grapeMatches.length > 0) {
+      // Create simple links without grape IDs for now
+      const sortedMatches = grapeMatches.sort((a, b) => b.grape_variety.length - a.grape_variety.length)
+      
+      for (const match of sortedMatches) {
+        const regex = new RegExp(`\\b${match.grape_variety}\\b`, 'gi')
+        linkedContent = linkedContent.replace(regex, `<span class="grape-link" data-grape-name="${match.grape_variety}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`)
+      }
+    }
+
     // Split by lines and format
-    const lines = content.split('\n')
+    const lines = linkedContent.split('\n')
     return lines.map((line, index) => {
       if (line.startsWith('*(') && line.endsWith(')*')) {
         return (
@@ -195,6 +242,35 @@ export default function HomePageContent() {
           </em>
         )
       }
+      
+      // Check if line contains grape links
+      if (line.includes('grape-link')) {
+        return (
+          <span 
+            key={index}
+            dangerouslySetInnerHTML={{ __html: line }}
+            onClick={async (e) => {
+              const target = e.target as HTMLElement
+              if (target.classList.contains('grape-link')) {
+                const grapeName = target.getAttribute('data-grape-name')
+                if (grapeName) {
+                  // Get grape ID from database
+                  const { data } = await supabase
+                    .from('grapes')
+                    .select('grape_id')
+                    .eq('grape_variety', grapeName)
+                    .single()
+                  
+                  if (data?.grape_id) {
+                    handleGrapeClick(data.grape_id)
+                  }
+                }
+              }
+            }}
+          />
+        )
+      }
+      
       return (
         <span key={index}>
           {line}
@@ -219,38 +295,19 @@ export default function HomePageContent() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left: Avatar */}
-            <div className="flex flex-col items-center">
-              <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 w-full max-w-md">
+            {/* Left Column: Giuseppe and Question Input */}
+            <div className="flex flex-col space-y-6">
+              {/* Giuseppe Avatar Card */}
+              <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 relative">
                 <div className="text-center">
-                  {/* Dynamic Avatar Container */}
+                  {/* Animated Giuseppe Avatar */}
                   <div className="relative mb-4 flex justify-center">
-                    {!imageError ? (
-                      <div className="relative">
-                        <img
-                          src={getAvatarImage()}
-                          alt="Giuseppe"
-                          className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
-                          onLoad={handleImageLoad}
-                          onError={handleImageError}
-                          style={{
-                            minHeight: imageLoaded ? 'auto' : '200px',
-                            minWidth: imageLoaded ? 'auto' : '200px'
-                          }}
-                        />
-                        {!imageLoaded && !imageError && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-amber-50 rounded-lg">
-                            <div className="animate-pulse text-amber-600">Loading...</div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <Avatar className="w-32 h-32 mx-auto">
-                        <AvatarFallback className="bg-amber-600 text-white text-2xl font-bold">
-                          GS
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
+                    <GiuseppeAvatar 
+                      className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
+                      src={getAvatarImage()}
+                      alt="Giuseppe"
+                      isThinking={avatarState === 'ANSWERING'}
+                    />
                   </div>
                   
                   <Badge 
@@ -268,15 +325,30 @@ export default function HomePageContent() {
                     {avatarState === 'ERROR' && 'Something went wrong'}
                   </p>
                 </div>
+                
+                {/* Voice Button - Bottom Right */}
+                <div className="absolute bottom-4 right-4">
+                  <Button
+                    onClick={isListening ? stopListening : startListening}
+                    variant={isListening ? 'destructive' : 'outline'}
+                    size="sm"
+                    disabled={isLoading}
+                    className="rounded-full w-12 h-12 p-0 shadow-lg"
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                </div>
               </Card>
-            </div>
 
-            {/* Right: Question Input */}
-            <div className="space-y-6">
+              {/* Question Input Card */}
               <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
                 <div className="space-y-4">
                   <Textarea
-                    placeholder="Ask Giuseppe anything about wine... (e.g., 'What wine pairs with pasta?', 'Tell me about Chianti', 'How do I build a wine cellar?')"                                                   
+                    placeholder={
+                      selectedGrapeId 
+                        ? "Ask a new question to return to answers, or ask about this grape..."
+                        : "Ask Giuseppe anything about wine... (e.g., 'What wine pairs with pasta?', 'Tell me about Chianti', 'How do I build a wine cellar?')"
+                    }                                                   
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     className="min-h-[120px] resize-none border-amber-300 focus:border-amber-500"
@@ -288,21 +360,11 @@ export default function HomePageContent() {
                     }}
                   />
                   
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={isListening ? stopListening : startListening}
-                      variant={isListening ? 'destructive' : 'outline'}
-                      size="sm"
-                      disabled={isLoading}
-                    >
-                      {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                      {isListening ? 'Stop' : 'Voice'}
-                    </Button>
-                    
+                  <div className="flex justify-center">
                     <Button
                       onClick={handleSubmit}
                       disabled={!question.trim() || isLoading}
-                      className="flex-1 bg-amber-600 hover:bg-amber-700"
+                      className="bg-amber-600 hover:bg-amber-700 px-8"
                     >
                       <Send className="w-4 h-4 mr-2" />
                       Ask Giuseppe!
@@ -310,55 +372,65 @@ export default function HomePageContent() {
                   </div>
                 </div>
               </Card>
+            </div>
 
-              {/* Answers */}
-              <div className="space-y-4">
-                <AnimatePresence>
-                  {answers.map((answer) => (
-                    <motion.div
-                      key={answer.id}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Card className="p-6 bg-white/90 backdrop-blur-sm border-amber-200">
-                        <div className="space-y-4">
-                          <div className="prose prose-amber max-w-none">
-                            {formatAnswer(answer.content)}
-                          </div>
-                          
-                          {answer.qaId && (
-                            <div className="flex items-center gap-2 pt-2 border-t border-amber-200">
-                              <span className="text-sm text-amber-600">Was this helpful?</span>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant={feedback[answer.id] === true ? 'default' : 'outline'}
-                                  onClick={() => handleFeedback(answer.id, true, answer.qaId)}
-                                  disabled={feedback[answer.id] !== null}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <ThumbsUp className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant={feedback[answer.id] === false ? 'destructive' : 'outline'}
-                                  onClick={() => handleFeedback(answer.id, false, answer.qaId)}
-                                  disabled={feedback[answer.id] !== null}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <ThumbsDown className="w-4 h-4" />
-                                </Button>
-                              </div>
+            {/* Right Column: Answers or Grape Detail */}
+            <div className="flex flex-col">
+              {selectedGrapeId ? (
+                <GrapeDetail 
+                  grapeId={selectedGrapeId} 
+                  onBack={handleBackFromGrape}
+                />
+              ) : (
+                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 h-full">
+                  <div className="space-y-4">
+                    <AnimatePresence>
+                      {answers.map((answer) => (
+                        <motion.div
+                          key={answer.id}
+                          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="p-4 bg-amber-50/50 rounded-lg border border-amber-200"
+                        >
+                          <div className="space-y-4">
+                            <div className="prose prose-amber max-w-none">
+                              {formatAnswer(answer.content)}
                             </div>
-                          )}
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
+                            
+                            {answer.qaId && (
+                              <div className="flex items-center gap-2 pt-2 border-t border-amber-200">
+                                <span className="text-sm text-amber-600">Was this helpful?</span>
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant={feedback[answer.id] === true ? 'default' : 'outline'}
+                                    onClick={() => handleFeedback(answer.id, true, answer.qaId)}
+                                    disabled={feedback[answer.id] !== null}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <ThumbsUp className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant={feedback[answer.id] === false ? 'destructive' : 'outline'}
+                                    onClick={() => handleFeedback(answer.id, false, answer.qaId)}
+                                    disabled={feedback[answer.id] !== null}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <ThumbsDown className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
         </div>

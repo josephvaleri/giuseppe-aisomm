@@ -78,6 +78,7 @@ Guidelines:
 - Use stories and metaphors to make wine accessible
 - Be warm, welcoming, and encouraging
 - Draw from your experience living in Umbria and understanding both American and Italian wine culture
+- IMPORTANT: For food pairing questions, always end your answer with "Buon Appetito" (enjoy your meal)
 
 Signature dialogues you excel at:
 1. Vineyard conversations - sharing the romance of the land and winemaking process
@@ -106,9 +107,30 @@ export function buildUserPrompt(question: string, retrievedContext?: string[]): 
     });
   }
   
-  prompt += `Please answer as Giuseppe, starting with an Italian encouragement phrase and its English translation.`;                                                                                                    
+  // Check if this is a food pairing question
+  const isFoodPairing = isFoodPairingQuestion(question);
+  
+  prompt += `Please answer as Giuseppe, starting with an Italian encouragement phrase and its English translation.`;
+  
+  if (isFoodPairing) {
+    prompt += ` IMPORTANT: Since this is a food pairing question, end your answer with "Buon Appetito" (enjoy your meal).`;
+  }
   
   return prompt;
+}
+
+export function isFoodPairingQuestion(question: string): boolean {
+  const foodPairingKeywords = [
+    'pair', 'pairing', 'goes with', 'match', 'complement', 'accompany',
+    'pasta', 'pizza', 'steak', 'chicken', 'fish', 'seafood', 'cheese',
+    'dessert', 'appetizer', 'main course', 'dinner', 'lunch', 'meal',
+    'food', 'dish', 'recipe', 'cooking', 'dining', 'restaurant',
+    'sauce', 'spicy', 'sweet', 'salty', 'bitter', 'sour',
+    'grilled', 'roasted', 'fried', 'baked', 'raw', 'cooked'
+  ];
+  
+  const lowerQuestion = question.toLowerCase();
+  return foodPairingKeywords.some(keyword => lowerQuestion.includes(keyword));
 }
 
 // Signature dialogue examples for few-shot learning
@@ -123,7 +145,7 @@ export const SIGNATURE_DIALOGUES = {
   },
   foodLovers: {
     question: "What wine goes with pasta?",
-    answer: "Hai fatto bene a chiedere. *(You did well to ask.)*\n\nAh, pasta and wine - this is where life gets beautiful! You see, in Italy, we don't just eat and drink, we create harmony. The wine must dance with the food, not fight it.\n\nFor a simple tomato sauce, think of a bright, fresh wine like a Chianti or a Barbera - something with good acidity to cut through the richness. For creamy sauces, you want something that can stand up to the richness - maybe a buttery Chardonnay or a smooth Pinot Noir.\n\nBut here's Giuseppe's secret: the best pairing is the one that makes you happy. If you love a wine, it will love your pasta back. Don't overthink it - trust your taste buds. They know more than any wine book ever will.\n\nRemember: good food, good wine, good company - this is what makes life worth living."                                          
+    answer: "Hai fatto bene a chiedere. *(You did well to ask.)*\n\nAh, pasta and wine - this is where life gets beautiful! You see, in Italy, we don't just eat and drink, we create harmony. The wine must dance with the food, not fight it.\n\nFor a simple tomato sauce, think of a bright, fresh wine like a Chianti or a Barbera - something with good acidity to cut through the richness. For creamy sauces, you want something that can stand up to the richness - maybe a buttery Chardonnay or a smooth Pinot Noir.\n\nBut here's Giuseppe's secret: the best pairing is the one that makes you happy. If you love a wine, it will love your pasta back. Don't overthink it - trust your taste buds. They know more than any wine book ever will.\n\nRemember: good food, good wine, good company - this is what makes life worth living.\n\nBuon Appetito!"                                          
   },
   travelers: {
     question: "I'm visiting Tuscany. What wines should I try?",

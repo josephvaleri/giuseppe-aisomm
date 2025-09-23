@@ -304,6 +304,14 @@ function AdminPageContent() {
                 </Button>
                 
                 <Button
+                  onClick={() => router.push('/admin/thinking-images')}
+                  variant="outline"
+                  className="w-full border-amber-300"
+                >
+                  Thinking Images
+                </Button>
+                
+                <Button
                   onClick={() => router.push('/admin/users')}
                   variant="outline"
                   className="w-full border-amber-300"

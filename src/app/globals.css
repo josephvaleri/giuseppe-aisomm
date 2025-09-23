@@ -120,3 +120,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Giuseppe Avatar Blinking Animation */
+.eyes.open {
+  transform: scaleY(1);
+  transition: transform 0.2s ease;
+}
+
+.eyes.closed {
+  transform: scaleY(0.1);
+  transition: transform 0.1s ease;
+}
