@@ -157,13 +157,13 @@ export async function getGrapeInfo(grapeId: number): Promise<GrapeInfo | null> {
       
       const { data: appellationNames, error: namesError } = await supabase
         .from('appellations')
-        .select('appellation_name')
+        .select('appellation')
         .in('appellation_id', appellationIds)
       
       if (namesError) {
         console.log('Appellations table error for grape_id:', grapeId, namesError)
       } else {
-        appellations = appellationNames?.map(item => item.appellation_name) || []
+        appellations = appellationNames?.map(item => item.appellation) || []
       }
     }
   } catch (error) {
