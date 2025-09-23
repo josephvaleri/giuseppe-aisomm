@@ -34,14 +34,19 @@ function ModerationPageContent() {
   const loadModerationItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('questions_answers')
+        .from('moderation_items')
         .select(`
+          item_id,
           qa_id,
-          question,
-          answer,
+          status,
           created_at,
-          user_id,
-          profiles!questions_answers_user_id_fkey(email)
+          questions_answers!moderation_items_qa_id_fkey(
+            question,
+            answer,
+            created_at,
+            user_id,
+            profiles!questions_answers_user_id_fkey(email)
+          )
         `)
         .order('created_at', { ascending: false })
 
@@ -49,11 +54,11 @@ function ModerationPageContent() {
 
       const formattedData = (data || []).map((item: any) => ({
         id: item.qa_id,
-        question: item.question,
-        answer: item.answer,
-        status: 'pending' as const,
-        created_at: item.created_at,
-        user_email: item.profiles?.email || 'Unknown'
+        question: item.questions_answers?.question || 'Unknown question',
+        answer: item.questions_answers?.answer || 'Unknown answer',
+        status: item.status,
+        created_at: item.questions_answers?.created_at || item.created_at,
+        user_email: item.questions_answers?.profiles?.email || 'Unknown'
       }))
 
       setItems(formattedData)
@@ -66,17 +71,33 @@ function ModerationPageContent() {
 
   const updateStatus = async (id: number, status: string, editedAnswer?: string) => {
     try {
-      const updateData: any = { status }
-      if (editedAnswer) {
-        updateData.answer = editedAnswer
-      }
-
-      const { error } = await supabase
-        .from('questions_answers')
-        .update(updateData)
+      // Update the moderation item status
+      const { error: moderationError } = await supabase
+        .from('moderation_items')
+        .update({ status })
         .eq('qa_id', id)
 
-      if (error) throw error
+      if (moderationError) throw moderationError
+
+      // If editing the answer, update the questions_answers table
+      if (editedAnswer) {
+        const { error: answerError } = await supabase
+          .from('questions_answers')
+          .update({ answer: editedAnswer })
+          .eq('qa_id', id)
+
+        if (answerError) throw answerError
+      }
+
+      // If accepting or rejecting, remove from moderation queue
+      if (status === 'accepted' || status === 'rejected') {
+        const { error: deleteError } = await supabase
+          .from('moderation_items')
+          .delete()
+          .eq('qa_id', id)
+
+        if (deleteError) throw deleteError
+      }
 
       // Reload items
       loadModerationItems()
