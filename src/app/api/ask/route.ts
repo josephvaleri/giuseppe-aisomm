@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       retrievalFeatures
     )
 
-    // Try to answer from database first
+    // Try to answer from database first - prioritize database heavily
     const dbResult = await synthesizeFromDB(question)
     const routeFeatures = extractRouteFeatures(questionFeatures, retrievalFeatures, dbResult.canAnswer)
 
@@ -99,10 +99,11 @@ export async function POST(request: NextRequest) {
     const routeScore = await mlInference.predictRoute(questionFeatures, retrievalFeatures, routeFeatures)
 
     let answer: string
-    let source: 'db' | 'openai' = 'openai'
+    let source: 'db' | 'openai' = 'db' // Default to database first
     let avatarState: 'ANSWERING' | 'ERROR' = 'ANSWERING'
 
-    if (routeScore > 0.7 && dbResult.canAnswer) {
+    // Prioritize database answers - lower threshold for database usage
+    if (dbResult.canAnswer && (routeScore > 0.3 || dbResult.answer.length > 50)) {
       // Use database synthesis
       answer = dbResult.answer
       source = 'db'

@@ -111,45 +111,38 @@ export async function synthesizeFromDB(
   question: string
 ): Promise<{ answer: string; canAnswer: boolean }> {
   const supabase = createServiceClient()
-  
-  // Try to answer from structured data using joins
   const lowerQuestion = question.toLowerCase()
   
-  // Check for appellation queries
-  if (lowerQuestion.includes('appellation') || lowerQuestion.includes('region')) {
-    const { data: appellations } = await supabase
-      .from('appellation')
-      .select(`
-        appellation,
-        classification,
-        founded_year,
-        major_grapes,
-        countries_regions!inner(country_name, wine_region)
-      `)
-      .limit(5)
+  // Enhanced grape queries - check for specific grape names
+  if (lowerQuestion.includes('grape') || lowerQuestion.includes('variety') || 
+      lowerQuestion.includes('chardonnay') || lowerQuestion.includes('cabernet') || 
+      lowerQuestion.includes('merlot') || lowerQuestion.includes('pinot') ||
+      lowerQuestion.includes('sauvignon') || lowerQuestion.includes('riesling')) {
     
-    if (appellations && appellations.length > 0) {
-      const answer = `Here are some appellations I found:\n\n` +
-        appellations.map((a: any) => 
-          `**${a.appellation}** (${a.countries_regions.country_name}, ${a.countries_regions.wine_region})\n` +
-          `Classification: ${a.classification || 'Not specified'}\n` +
-          `Founded: ${a.founded_year || 'Unknown'}\n` +
-          `Major grapes: ${a.major_grapes || 'Various'}\n`
-        ).join('\n')
-      
-      return { answer, canAnswer: true }
+    // Try to find specific grape first
+    const grapeKeywords = ['chardonnay', 'cabernet', 'merlot', 'pinot', 'sauvignon', 'riesling', 'syrah', 'malbec']
+    const foundKeyword = grapeKeywords.find(keyword => lowerQuestion.includes(keyword))
+    
+    let grapes
+    if (foundKeyword) {
+      // Search for specific grape
+      const { data } = await supabase
+        .from('grapes')
+        .select('*')
+        .ilike('grape_variety', `%${foundKeyword}%`)
+        .limit(3)
+      grapes = data
+    } else {
+      // Get general grape info
+      const { data } = await supabase
+        .from('grapes')
+        .select('*')
+        .limit(5)
+      grapes = data
     }
-  }
-  
-  // Check for grape queries
-  if (lowerQuestion.includes('grape') || lowerQuestion.includes('variety')) {
-    const { data: grapes } = await supabase
-      .from('grapes')
-      .select('grape_variety, wine_color, flavor, notable_wines')
-      .limit(5)
     
     if (grapes && grapes.length > 0) {
-      const answer = `Here are some grape varieties I found:\n\n` +
+      const answer = `Here's what I found about grape varieties:\n\n` +
         grapes.map((g: any) => 
           `**${g.grape_variety}** (${g.wine_color})\n` +
           `Flavor profile: ${g.flavor || 'Not specified'}\n` +
@@ -160,19 +153,36 @@ export async function synthesizeFromDB(
     }
   }
   
-  // Check for wine queries
-  if (lowerQuestion.includes('wine') && (lowerQuestion.includes('producer') || lowerQuestion.includes('vintage'))) {
+  // Enhanced appellation queries
+  if (lowerQuestion.includes('appellation') || lowerQuestion.includes('region') ||
+      lowerQuestion.includes('chianti') || lowerQuestion.includes('burgundy') ||
+      lowerQuestion.includes('bordeaux') || lowerQuestion.includes('napa')) {
+    
+    const { data: appellations } = await supabase
+      .from('appellation')
+      .select('*')
+      .limit(5)
+    
+    if (appellations && appellations.length > 0) {
+      const answer = `Here are some appellations I found:\n\n` +
+        appellations.map((a: any) => 
+          `**${a.appellation}**\n` +
+          `Classification: ${a.classification || 'Not specified'}\n` +
+          `Founded: ${a.founded_year || 'Unknown'}\n` +
+          `Major grapes: ${a.major_grapes || 'Various'}\n`
+        ).join('\n')
+      
+      return { answer, canAnswer: true }
+    }
+  }
+  
+  // Enhanced wine queries
+  if (lowerQuestion.includes('wine') || lowerQuestion.includes('producer') || 
+      lowerQuestion.includes('vintage') || lowerQuestion.includes('bottle')) {
+    
     const { data: wines } = await supabase
-      .from('wines')
-      .select(`
-        wine_name,
-        producer,
-        vintage,
-        color,
-        alcohol,
-        appellation!inner(appellation),
-        countries_regions!inner(country_name, wine_region)
-      `)
+      .from('wine')
+      .select('*')
       .limit(5)
     
     if (wines && wines.length > 0) {
@@ -181,10 +191,32 @@ export async function synthesizeFromDB(
           `**${w.wine_name}** by ${w.producer}\n` +
           `Vintage: ${w.vintage || 'NV'}\n` +
           `Color: ${w.color || 'Not specified'}\n` +
-          `Region: ${w.countries_regions.wine_region}, ${w.countries_regions.country_name}\n` +
-          `Appellation: ${w.appellation.appellation}\n` +
           `Alcohol: ${w.alcohol || 'Not specified'}\n`
         ).join('\n')
+      
+      return { answer, canAnswer: true }
+    }
+  }
+  
+  // Check for food pairing queries
+  if (lowerQuestion.includes('pair') || lowerQuestion.includes('pairing') || 
+      lowerQuestion.includes('goes with') || lowerQuestion.includes('match') ||
+      lowerQuestion.includes('pasta') || lowerQuestion.includes('steak') ||
+      lowerQuestion.includes('cheese') || lowerQuestion.includes('fish')) {
+    
+    // Try to find relevant grapes for pairing
+    const { data: grapes } = await supabase
+      .from('grapes')
+      .select('grape_variety, wine_color, flavor')
+      .limit(3)
+    
+    if (grapes && grapes.length > 0) {
+      const answer = `For food pairing, here are some excellent grape varieties to consider:\n\n` +
+        grapes.map((g: any) => 
+          `**${g.grape_variety}** (${g.wine_color})\n` +
+          `Flavor profile: ${g.flavor || 'Not specified'}\n`
+        ).join('\n') +
+        `\nThese varieties offer great versatility for food pairing!`
       
       return { answer, canAnswer: true }
     }
