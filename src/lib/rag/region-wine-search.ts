@@ -73,7 +73,7 @@ export async function searchAppellationsByRegion(regionName: string): Promise<Ap
  * Logic: countries_regions.wine_region + country_name -> region_id -> appellation.region_id -> appellation.appellation
  * If region not found, fallback to country: countries_regions.country_name -> country_id -> appellation.country_id
  */
-export async function searchAppellationsByCountryRegion(countryName: string, regionName: string): Promise<AppellationResult[]> {
+export async function searchAppellationsByCountryRegion(countryName: string, regionName: string): Promise<{appellations: AppellationResult[], usedFallback: boolean}> {
   const supabase = createServiceClient()
 
   console.log('Searching for appellations in region:', regionName, 'of country:', countryName)
@@ -93,7 +93,7 @@ export async function searchAppellationsByCountryRegion(countryName: string, reg
 
     if (regionError) {
       console.error('Error fetching specific region:', regionError)
-      return []
+      return {appellations: [], usedFallback: false}
     }
 
     if (region && region.length > 0) {
@@ -113,12 +113,15 @@ export async function searchAppellationsByCountryRegion(countryName: string, reg
       }
 
       if (appellations && appellations.length > 0) {
-        return appellations.map(app => ({
-          appellation: app.appellation,
-          classification: app.classification || 'Not specified',
-          founded_year: app.founded_year || 'Unknown',
-          major_grapes: app.major_grapes || 'Various'
-        }))
+        return {
+          appellations: appellations.map(app => ({
+            appellation: app.appellation,
+            classification: app.classification || 'Not specified',
+            founded_year: app.founded_year || 'Unknown',
+            major_grapes: app.major_grapes || 'Various'
+          })),
+          usedFallback: false
+        }
       }
     }
 
@@ -172,38 +175,47 @@ export async function searchAppellationsByCountryRegion(countryName: string, reg
 
     if (appellationsError) {
       console.error('Error fetching appellations for country:', appellationsError)
-      return []
+      return {appellations: [], usedFallback: true}
     }
 
     if (!appellations || appellations.length === 0) {
       console.log('No appellations found for country:', countryName)
-      return []
+      return {appellations: [], usedFallback: true}
     }
 
-    return appellations.map(app => ({
-      appellation: app.appellation,
-      classification: app.classification || 'Not specified',
-      founded_year: app.founded_year || 'Unknown',
-      major_grapes: app.major_grapes || 'Various'
-    }))
+    return {
+      appellations: appellations.map(app => ({
+        appellation: app.appellation,
+        classification: app.classification || 'Not specified',
+        founded_year: app.founded_year || 'Unknown',
+        major_grapes: app.major_grapes || 'Various'
+      })),
+      usedFallback: true
+    }
 
   } catch (error) {
     console.error('Unhandled error in searchAppellationsByCountryRegion:', error)
-    return []
+    return {appellations: [], usedFallback: false}
   }
 }
 
 export function formatAppellationResults(
   appellations: AppellationResult[],
   regionName: string,
-  countryName?: string
+  countryName?: string,
+  isCountryFallback: boolean = false
 ): string {
   if (appellations.length === 0) {
     return `I couldn't find any appellations from ${countryName ? `${regionName} of ${countryName}` : regionName}.`
   }
 
-  const location = countryName ? `${regionName} of ${countryName}` : regionName
-  let response = `Here are the wine appellations from ${location}:\n\n`
+  let response: string
+  if (isCountryFallback) {
+    response = `I cannot find a wine region in ${countryName} called ${regionName}, that might be an appellation inside a region. Here is a list of appellations in ${countryName}:\n\n`
+  } else {
+    const location = countryName ? `${regionName} of ${countryName}` : regionName
+    response = `Here are the wine appellations from ${location}:\n\n`
+  }
 
   appellations.forEach(app => {
     response += `<strong>${app.appellation}</strong><br/>`

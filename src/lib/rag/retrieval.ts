@@ -216,10 +216,10 @@ export async function synthesizeFromDB(
           appellationResults = await searchAppellationsByRegion(regionName)
         }
 
-        console.log('Appellation results:', appellationResults.length, 'appellations found')
+        console.log('Appellation results:', appellationResults.appellations.length, 'appellations found')
 
-        if (appellationResults.length > 0) {
-          const answer = formatAppellationResults(appellationResults, regionName, countryName)
+        if (appellationResults.appellations.length > 0) {
+          const answer = formatAppellationResults(appellationResults.appellations, regionName, countryName, appellationResults.usedFallback)
           console.log('Returning region-specific appellation answer')
           return { answer, canAnswer: true }
         } else {
