@@ -288,6 +288,16 @@ export default function HomePageContent() {
         )
       }
       
+      // Check if line contains HTML tags
+      if (line.includes('<') && line.includes('>')) {
+        return (
+          <span 
+            key={index}
+            dangerouslySetInnerHTML={{ __html: line }}
+          />
+        )
+      }
+      
       return (
         <span key={index}>
           {line}
