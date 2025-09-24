@@ -180,9 +180,9 @@ export async function synthesizeFromDB(
   }
 
   // Wine region queries - check for "wines from [region]" or "wines from [region] of [country]"
-  const wineRegionPattern = /wines.*?(?:from|in|of)\s+([A-Za-z\s]+?)(?:\s+of\s+([A-Za-z\s]+))?/i
-  const simpleWineRegionPattern = /wines\s+(?:from|in)\s+([A-Za-z\s]+)/i
-  const wineRegionDetection = /wines.*?(?:from|in|of)\s+([A-Za-z\s]+?)(?:\?|$)/i
+  const wineRegionPattern = /wines.*?(?:from|in|of)\s+([A-Za-z]+?)(?:\s+region\s+of\s+([A-Za-z\s]+))?/i
+  const simpleWineRegionPattern = /wines\s+(?:from|in)\s+([A-Za-z]+)/i
+  const wineRegionDetection = /wines.*?(?:from|in|of)\s+([A-Za-z]+?)(?:\s+region\s+of\s+([A-Za-z\s]+))?/i
 
   const wineRegionMatch = question.match(wineRegionPattern)
   const simpleWineRegionMatch = question.match(simpleWineRegionPattern)
@@ -198,13 +198,22 @@ export async function synthesizeFromDB(
     // Prioritize wineRegionDetection as it's working correctly
     if (wineRegionDetectionMatch) {
       regionName = wineRegionDetectionMatch[1]?.trim()
-      countryName = null
+      countryName = wineRegionDetectionMatch[2]?.trim() || null
     } else if (wineRegionMatch) {
       regionName = wineRegionMatch[1]?.trim()
       countryName = wineRegionMatch[2]?.trim() || null
     } else if (simpleWineRegionMatch) {
       regionName = simpleWineRegionMatch[1]?.trim()
       countryName = null
+    }
+
+    // Additional parsing for "region of" pattern
+    if (regionName && regionName.includes('region')) {
+      // Extract just the region name before "region"
+      const regionMatch = regionName.match(/^([A-Za-z]+)\s+region/i)
+      if (regionMatch) {
+        regionName = regionMatch[1]
+      }
     }
 
     console.log('Wine region name:', regionName)
