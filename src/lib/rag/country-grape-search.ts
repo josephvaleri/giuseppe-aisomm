@@ -246,45 +246,18 @@ export function formatGrapeResults(grapeResults: GrapeResult[], countryName: str
   )
 
   if (redGrapes.length > 0) {
-    answer += `**Red Grapes:**\n`
-    redGrapes.forEach(grape => {
-      answer += `• **${grape.grape_variety}** (${grape.wine_color})\n`
-      if (grape.flavor) {
-        answer += `  Flavor: ${grape.flavor}\n`
-      }
-      if (grape.appellations.length > 0) {
-        answer += `  Used in: ${grape.appellations.join(', ')}\n`
-      }
-      answer += `\n`
-    })
+    const redGrapeNames = redGrapes.map(grape => grape.grape_variety).join(', ')
+    answer += `Red Grapes: ${redGrapeNames}\n\n`
   }
 
   if (whiteGrapes.length > 0) {
-    answer += `**White Grapes:**\n`
-    whiteGrapes.forEach(grape => {
-      answer += `• **${grape.grape_variety}** (${grape.wine_color})\n`
-      if (grape.flavor) {
-        answer += `  Flavor: ${grape.flavor}\n`
-      }
-      if (grape.appellations.length > 0) {
-        answer += `  Used in: ${grape.appellations.join(', ')}\n`
-      }
-      answer += `\n`
-    })
+    const whiteGrapeNames = whiteGrapes.map(grape => grape.grape_variety).join(', ')
+    answer += `White Grapes: ${whiteGrapeNames}\n\n`
   }
 
   if (otherGrapes.length > 0) {
-    answer += `**Other Grapes:**\n`
-    otherGrapes.forEach(grape => {
-      answer += `• **${grape.grape_variety}** (${grape.wine_color})\n`
-      if (grape.flavor) {
-        answer += `  Flavor: ${grape.flavor}\n`
-      }
-      if (grape.appellations.length > 0) {
-        answer += `  Used in: ${grape.appellations.join(', ')}\n`
-      }
-      answer += `\n`
-    })
+    const otherGrapeNames = otherGrapes.map(grape => grape.grape_variety).join(', ')
+    answer += `Other Grapes: ${otherGrapeNames}\n\n`
   }
 
   return answer
