@@ -115,18 +115,24 @@ export async function synthesizeFromDB(
   const lowerQuestion = question.toLowerCase()
   
   // Country/Region grape queries - check for "grapes used in [country]" or "grapes used in [region] of [country]"
-  const countryGrapePattern = /grapes.*?(?:used in|grown in|found in|commonly used in|in)\s+([^,?]+?)(?:\s+of\s+([^?]+))?/i
+  const countryGrapePattern = /grapes.*?(?:used in|grown in|found in|commonly used in|in)\s+([A-Za-z\s]+?)(?:\s+of\s+([A-Za-z\s]+))?/i
   
   // Also check for simpler patterns like "grapes in [country]"
-  const simpleCountryPattern = /grapes\s+(?:in|from)\s+([^?]+)/i
+  const simpleCountryPattern = /grapes\s+(?:in|from)\s+([A-Za-z\s]+)/i
+  
+  // Simple country detection - just look for country names after "grapes"
+  const simpleCountryDetection = /grapes.*?(?:in|from|used in|grown in|found in|commonly used in)\s+([A-Za-z\s]+?)(?:\?|$)/i
+  
   const countryMatch = question.match(countryGrapePattern)
   const simpleMatch = question.match(simpleCountryPattern)
+  const countryDetection = question.match(simpleCountryDetection)
   
   console.log('Question:', question)
   console.log('Country match:', countryMatch)
   console.log('Simple match:', simpleMatch)
+  console.log('Country detection:', countryDetection)
   
-  if (countryMatch || simpleMatch) {
+  if (countryMatch || simpleMatch || countryDetection) {
     let regionName, countryName
     
     if (countryMatch) {
@@ -134,6 +140,9 @@ export async function synthesizeFromDB(
       countryName = countryMatch[2]?.trim() || countryMatch[1]?.trim()
     } else if (simpleMatch) {
       countryName = simpleMatch[1]?.trim()
+      regionName = null
+    } else if (countryDetection) {
+      countryName = countryDetection[1]?.trim()
       regionName = null
     }
     
