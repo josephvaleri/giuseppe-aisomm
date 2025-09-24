@@ -179,28 +179,17 @@ export async function synthesizeFromDB(
     }
   }
 
-  // Wine region queries - simple and direct approach
-  if (lowerQuestion.includes('wines') && (lowerQuestion.includes('from') || lowerQuestion.includes('in'))) {
+  // Wine region queries - ultra simple approach
+  if (lowerQuestion.includes('wines') && lowerQuestion.includes('region')) {
     let regionName, countryName
 
-    // Direct pattern matching for "wines from [region] region of [country]"
-    const regionOfMatch = question.match(/wines.*?from\s+([A-Za-z]+)\s+region\s+of\s+([A-Za-z\s]+)/i)
+    // Ultra simple: look for "region of" pattern
+    const regionOfMatch = question.match(/([A-Za-z]+)\s+region\s+of\s+([A-Za-z\s]+)/i)
     if (regionOfMatch) {
       regionName = regionOfMatch[1]?.trim()
-      countryName = regionOfMatch[2]?.trim()
+      countryName = regionOfMatch[2]?.trim().replace(/[^\w\s]/g, '') // Remove punctuation
       console.log('Region of match found:', regionOfMatch)
-    } else {
-      // Fallback: try to extract region and country from the question
-      const words = question.toLowerCase().split(' ')
-      const fromIndex = words.indexOf('from')
-      const regionIndex = words.indexOf('region')
-      const ofIndex = words.indexOf('of')
-      
-      if (fromIndex !== -1 && regionIndex !== -1 && ofIndex !== -1) {
-        regionName = words[fromIndex + 1] // Word after "from"
-        countryName = words.slice(ofIndex + 1).join(' ').replace(/[^\w\s]/g, '').trim() // Everything after "of"
-        console.log('Manual extraction - region:', regionName, 'country:', countryName)
-      }
+      console.log('Extracted - region:', regionName, 'country:', countryName)
     }
 
     console.log('Wine region name:', regionName)
