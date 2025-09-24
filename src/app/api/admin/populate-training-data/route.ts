@@ -83,6 +83,8 @@ export async function POST(request: NextRequest) {
 
     // Insert training examples
     if (trainingExamples.length > 0) {
+      console.log('Sample training example:', JSON.stringify(trainingExamples[0], null, 2))
+      
       const { error: insertError } = await supabase
         .from('ml_training_examples')
         .insert(trainingExamples)
