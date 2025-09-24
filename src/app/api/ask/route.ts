@@ -4,6 +4,34 @@ import { getMLInference } from '@/lib/ml/infer'
 import { loadEntityDictionaries, extractQuestionFeatures, extractRetrievalFeatures, extractRouteFeatures } from '@/lib/ml/features'
 import { searchDocuments, synthesizeFromDB } from '@/lib/rag/retrieval'
 import { GIUSEPPE_SYSTEM_PROMPT, getRandomItalianStarter, buildUserPrompt } from '@/lib/giuseppe/persona'
+
+// Function to check if a question is wine-related
+function isWineTopic(question: string): boolean {
+  const lowerQuestion = question.toLowerCase()
+  
+  // Wine-related keywords
+  const wineKeywords = [
+    'wine', 'wines', 'grape', 'grapes', 'vineyard', 'vineyards',
+    'vintage', 'vintages', 'winery', 'wineries', 'sommelier',
+    'appellation', 'appellations', 'terroir', 'fermentation',
+    'tannin', 'tannins', 'acidity', 'alcohol', 'bottle', 'bottles',
+    'cork', 'corks', 'decant', 'decanting', 'taste', 'tasting',
+    'aroma', 'aromas', 'bouquet', 'flavor', 'flavors',
+    'red wine', 'white wine', 'rosé', 'rose', 'sparkling',
+    'champagne', 'prosecco', 'cava', 'sherry', 'port',
+    'chardonnay', 'cabernet', 'merlot', 'pinot', 'sauvignon',
+    'riesling', 'syrah', 'shiraz', 'malbec', 'tempranillo',
+    'sangiovese', 'nebbiolo', 'barbera', 'dolcetto',
+    'burgundy', 'bordeaux', 'champagne', 'tuscany', 'piedmont',
+    'rioja', 'rhone', 'loire', 'alsace', 'provence',
+    'napa', 'sonoma', 'tuscany', 'chianti', 'barolo',
+    'brunello', 'amarone', 'valpolicella', 'soave',
+    'vermentino', 'pinot grigio', 'pinot gris', 'gewürztraminer'
+  ]
+  
+  // Check if any wine keywords are present
+  return wineKeywords.some(keyword => lowerQuestion.includes(keyword))
+}
 import OpenAI from 'openai'
 import { z } from 'zod'
 
@@ -110,6 +138,9 @@ export async function POST(request: NextRequest) {
       dbResult.answer.includes('Here are some wines I found')
     )
     
+    // Check if question is wine-related
+    const isWineRelated = isWineTopic(question)
+    
     if (hasHighQualityAnswer && !isGenericFallback) {
       // Use database synthesis
       answer = dbResult.answer
@@ -119,7 +150,7 @@ export async function POST(request: NextRequest) {
       answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
       avatarState = 'ERROR'
       source = 'db'
-    } else {
+    } else if (isWineRelated) {
       // Use OpenAI with RAG
       try {
         const context = rerankedChunks.slice(0, 3).map(c => c.chunk)
@@ -141,6 +172,11 @@ export async function POST(request: NextRequest) {
         avatarState = 'ERROR'
         answer = 'Mi dispiace, ho avuto un problema tecnico. *(I\'m sorry, I had a technical problem.)*\n\nPlease try asking your question again.'
       }
+    } else {
+      // Non-wine topic - show error
+      answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
+      avatarState = 'ERROR'
+      source = 'db'
     }
 
     // Add Italian starter
