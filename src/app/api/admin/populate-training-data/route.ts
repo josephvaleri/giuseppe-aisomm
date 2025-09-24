@@ -134,14 +134,16 @@ async function createTrainingExamples(
   examples.push({
     qa_id: qaId,
     kind: 'reranker',
-    features: {
-      question_length: question.length,
-      answer_length: answer.length,
-      source: answer.includes('database') ? 1 : 0,
-      has_italian: answer.includes('*(') ? 1 : 0,
-      has_grape_links: answer.includes('grape-link') ? 1 : 0,
-      question_features: questionFeatures
-    },
+    features: [
+      question.length,
+      answer.length,
+      answer.includes('database') ? 1 : 0,
+      answer.includes('*(') ? 1 : 0,
+      answer.includes('grape-link') ? 1 : 0,
+      questionFeatures.wine_keywords,
+      questionFeatures.technical_terms,
+      questionFeatures.complexity_score
+    ],
     label: qualityScore,
     meta: {
       decision,
@@ -153,11 +155,14 @@ async function createTrainingExamples(
   examples.push({
     qa_id: qaId,
     kind: 'route',
-    features: {
-      question_features: questionFeatures,
-      quality_score: qualityScore,
-      source_preference: qualityScore > 0.7 ? 'db' : 'openai'
-    },
+    features: [
+      questionFeatures.wine_keywords,
+      questionFeatures.technical_terms,
+      questionFeatures.geographic_terms,
+      questionFeatures.complexity_score,
+      qualityScore,
+      questionFeatures.is_question ? 1 : 0
+    ],
     label: qualityScore > 0.7 ? 1 : 0, // 1 for database, 0 for OpenAI
     meta: {
       decision,
@@ -169,13 +174,15 @@ async function createTrainingExamples(
   examples.push({
     qa_id: qaId,
     kind: 'intent',
-    features: {
-      question_features: questionFeatures,
-      is_wine_related: questionFeatures.wine_keywords > 0 ? 1 : 0,
-      is_food_pairing: question.toLowerCase().includes('pair') || 
-                       question.toLowerCase().includes('go well') ? 1 : 0,
-      is_region_query: question.toLowerCase().includes('region') ? 1 : 0
-    },
+    features: [
+      questionFeatures.wine_keywords,
+      questionFeatures.food_keywords,
+      questionFeatures.technical_terms,
+      questionFeatures.geographic_terms,
+      questionFeatures.complexity_score,
+      question.toLowerCase().includes('pair') || question.toLowerCase().includes('go well') ? 1 : 0,
+      question.toLowerCase().includes('region') ? 1 : 0
+    ],
     label: questionFeatures.wine_keywords > 0 ? 1 : 0, // 1 for wine-related, 0 for not
     meta: {
       decision,
