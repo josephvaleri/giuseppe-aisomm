@@ -21,12 +21,19 @@ function AdminPageContent() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [stats, setStats] = useState({
+    totalQuestions: 0,
+    positiveFeedback: 0,
+    pendingModeration: 0
+  })
+  const [statsLoading, setStatsLoading] = useState(true)
   
   const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
     loadSettings()
+    loadStats()
   }, [])
 
   const loadSettings = async () => {
@@ -42,6 +49,37 @@ function AdminPageContent() {
       console.error('Error loading settings:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      // Get total questions count
+      const { count: totalQuestions } = await supabase
+        .from('questions_answers')
+        .select('*', { count: 'exact', head: true })
+
+      // Get positive feedback count (thumbs_up = true)
+      const { count: positiveFeedback } = await supabase
+        .from('questions_answers')
+        .select('*', { count: 'exact', head: true })
+        .eq('thumbs_up', true)
+
+      // Get pending moderation count
+      const { count: pendingModeration } = await supabase
+        .from('moderation_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+
+      setStats({
+        totalQuestions: totalQuestions || 0,
+        positiveFeedback: positiveFeedback || 0,
+        pendingModeration: pendingModeration || 0
+      })
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    } finally {
+      setStatsLoading(false)
     }
   }
 
@@ -245,15 +283,21 @@ function AdminPageContent() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-amber-700">Total Questions</span>
-                  <Badge variant="outline">Loading...</Badge>
+                  <Badge variant="outline">
+                    {statsLoading ? 'Loading...' : stats.totalQuestions}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-amber-700">Positive Feedback</span>
-                  <Badge variant="outline">Loading...</Badge>
+                  <Badge variant="outline">
+                    {statsLoading ? 'Loading...' : stats.positiveFeedback}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-amber-700">Pending Moderation</span>
-                  <Badge variant="outline">Loading...</Badge>
+                  <Badge variant="outline">
+                    {statsLoading ? 'Loading...' : stats.pendingModeration}
+                  </Badge>
                 </div>
               </div>
             </Card>
