@@ -115,7 +115,7 @@ export function extractIntentFeatures(question: string) {
       'tannin', 'acidity', 'ph', 'fermentation', 'aging', 'barrel'
     ],
     geographic: [
-      'region', 'country', 'from', 'where', 'appellation', 'terroir'
+      'region', 'country', 'from', 'where', 'appellation', 'terroir', 'tuscany', 'italy', 'france', 'spain'
     ],
     shopping: [
       'buy', 'purchase', 'price', 'cost', 'store', 'shop'
