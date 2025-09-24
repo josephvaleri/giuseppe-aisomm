@@ -87,7 +87,7 @@ export async function trainRerankerModel(): Promise<{ weights: ModelWeights; met
   }
 
   const trainingData = examples.map(ex => ({
-    features: ex.features as number[],
+    features: Array.isArray(ex.features) ? ex.features : Object.values(ex.features as any),
     label: ex.label as number,
     meta: ex.meta
   }))
@@ -136,7 +136,7 @@ export async function trainRouteModel(): Promise<{ weights: ModelWeights; metric
   }
 
   const trainingData = examples.map(ex => ({
-    features: ex.features as number[],
+    features: Array.isArray(ex.features) ? ex.features : Object.values(ex.features as any),
     label: ex.label as number,
     meta: ex.meta
   }))
@@ -185,7 +185,7 @@ export async function trainIntentModel(): Promise<{ weights: ModelWeights; metri
   }
 
   const trainingData = examples.map(ex => ({
-    features: ex.features as number[],
+    features: Array.isArray(ex.features) ? ex.features : Object.values(ex.features as any),
     label: ex.label as number,
     meta: ex.meta
   }))
