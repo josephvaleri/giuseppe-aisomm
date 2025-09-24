@@ -183,13 +183,21 @@ export async function synthesizeFromDB(
   if (lowerQuestion.includes('wines') && lowerQuestion.includes('region')) {
     let regionName, countryName
 
-    // Ultra simple: look for "region of" pattern
-    const regionOfMatch = question.match(/([A-Za-z]+)\s+region\s+of\s+([A-Za-z\s]+)/i)
+    // Ultra simple: look for "region of" pattern - improved to handle multi-word regions
+    const regionOfMatch = question.match(/([A-Za-z\s]+?)\s+region\s+of\s+([A-Za-z\s]+)/i)
     if (regionOfMatch) {
       regionName = regionOfMatch[1]?.trim()
       countryName = regionOfMatch[2]?.trim().replace(/[^\w\s]/g, '') // Remove punctuation
       console.log('Region of match found:', regionOfMatch)
       console.log('Extracted - region:', regionName, 'country:', countryName)
+    } else {
+      // Fallback: try to extract region and country from other patterns
+      const fallbackMatch = question.match(/(?:from|in|of)\s+([A-Za-z\s]+?)\s+(?:region|area|zone)/i)
+      if (fallbackMatch) {
+        regionName = fallbackMatch[1]?.trim()
+        console.log('Fallback match found:', fallbackMatch)
+        console.log('Extracted region from fallback:', regionName)
+      }
     }
 
     console.log('Wine region name:', regionName)

@@ -80,11 +80,14 @@ export async function searchAppellationsByCountryRegion(countryName: string, reg
 
   try {
     // Step 1: Try to find the specific region_id for the country and region name
+    console.log('Looking for region:', regionName, 'in country:', countryName)
     const { data: region, error: regionError } = await supabase
       .from('countries_regions')
-      .select('region_id')
+      .select('region_id, wine_region, country_name')
       .eq('country_name', countryName)
       .ilike('wine_region', regionName)
+    
+    console.log('Region query result:', region)
 
     console.log('Specific region found:', region?.length || 0)
 
@@ -141,11 +144,29 @@ export async function searchAppellationsByCountryRegion(countryName: string, reg
 
     const countryIds = country.map(c => c.country_id)
 
-    // Step 3: Find all appellations from this country
+    // Step 3: Find all regions for this country, then get appellations
+    const { data: regions, error: regionsError } = await supabase
+      .from('countries_regions')
+      .select('region_id')
+      .in('country_id', countryIds)
+    
+    if (regionsError) {
+      console.error('Error fetching regions for country:', regionsError)
+      return []
+    }
+    
+    if (!regions || regions.length === 0) {
+      console.log('No regions found for country:', countryName)
+      return []
+    }
+    
+    const regionIds = regions.map(r => r.region_id)
+    
+    // Step 4: Find all appellations from these regions
     const { data: appellations, error: appellationsError } = await supabase
       .from('appellation')
       .select('appellation, classification, founded_year, major_grapes')
-      .in('country_id', countryIds)
+      .in('region_id', regionIds)
 
     console.log('Appellations found for country:', appellations?.length || 0)
 
