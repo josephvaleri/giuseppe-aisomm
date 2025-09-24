@@ -135,11 +135,15 @@ export async function POST(request: NextRequest) {
     const isGenericFallback = dbResult.canAnswer && routeScore <= 0.3 && (
       dbResult.answer.includes('Here are some appellations I found') ||
       dbResult.answer.includes('Here are some grapes I found') ||
-      dbResult.answer.includes('Here are some wines I found')
+      dbResult.answer.includes('Here are some wines I found') ||
+      dbResult.answer.includes('Here are some') ||
+      (dbResult.answer.length < 100 && dbResult.answer.includes('**'))
     )
     
     // Check if question is wine-related
     const isWineRelated = isWineTopic(question)
+    
+    console.log('Wine topic check:', { question, isWineRelated, hasHighQualityAnswer, isGenericFallback, routeScore })
     
     if (hasHighQualityAnswer && !isGenericFallback) {
       // Use database synthesis
