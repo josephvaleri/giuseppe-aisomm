@@ -183,20 +183,28 @@ export async function synthesizeFromDB(
   const wineRegionPattern = /wines.*?(?:from|in|of)\s+([A-Za-z]+?)(?:\s+region\s+of\s+([A-Za-z\s]+))?/i
   const simpleWineRegionPattern = /wines\s+(?:from|in)\s+([A-Za-z]+)/i
   const wineRegionDetection = /wines.*?(?:from|in|of)\s+([A-Za-z]+?)(?:\s+region\s+of\s+([A-Za-z\s]+))?/i
+  
+  // Specific pattern for "region of" queries
+  const regionOfPattern = /wines.*?(?:from|in|of)\s+([A-Za-z]+)\s+region\s+of\s+([A-Za-z\s]+)/i
 
   const wineRegionMatch = question.match(wineRegionPattern)
   const simpleWineRegionMatch = question.match(simpleWineRegionPattern)
   const wineRegionDetectionMatch = question.match(wineRegionDetection)
+  const regionOfMatch = question.match(regionOfPattern)
 
   console.log('Wine region match:', wineRegionMatch)
   console.log('Simple wine region match:', simpleWineRegionMatch)
   console.log('Wine region detection:', wineRegionDetectionMatch)
+  console.log('Region of match:', regionOfMatch)
 
-  if (wineRegionMatch || simpleWineRegionMatch || wineRegionDetectionMatch) {
+  if (wineRegionMatch || simpleWineRegionMatch || wineRegionDetectionMatch || regionOfMatch) {
     let regionName, countryName
 
-    // Prioritize wineRegionDetection as it's working correctly
-    if (wineRegionDetectionMatch) {
+    // Prioritize the specific "region of" pattern
+    if (regionOfMatch) {
+      regionName = regionOfMatch[1]?.trim()
+      countryName = regionOfMatch[2]?.trim() || null
+    } else if (wineRegionDetectionMatch) {
       regionName = wineRegionDetectionMatch[1]?.trim()
       countryName = wineRegionDetectionMatch[2]?.trim() || null
     } else if (wineRegionMatch) {
@@ -205,15 +213,6 @@ export async function synthesizeFromDB(
     } else if (simpleWineRegionMatch) {
       regionName = simpleWineRegionMatch[1]?.trim()
       countryName = null
-    }
-
-    // Additional parsing for "region of" pattern
-    if (regionName && regionName.includes('region')) {
-      // Extract just the region name before "region"
-      const regionMatch = regionName.match(/^([A-Za-z]+)\s+region/i)
-      if (regionMatch) {
-        regionName = regionMatch[1]
-      }
     }
 
     console.log('Wine region name:', regionName)
