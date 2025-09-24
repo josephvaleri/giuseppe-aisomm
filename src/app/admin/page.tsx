@@ -146,7 +146,7 @@ function AdminPageContent() {
               <div className="flex items-center space-x-4">
                 <h1 className="text-3xl font-bold text-amber-900">Admin Dashboard</h1>
                 <span className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded">
-                  v1.012
+                  v1.013
                 </span>
               </div>
               <p className="text-amber-700">Manage Giuseppe the AISomm settings</p>
@@ -263,6 +263,21 @@ function AdminPageContent() {
                     <pre className="whitespace-pre-wrap">
                       {JSON.stringify(settings.ml_config, null, 2)}
                     </pre>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium text-amber-800 mb-2">Model Version</h3>
+                  <div className="bg-blue-50 p-3 rounded-md text-sm border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-blue-800 font-medium">Current Model Version:</span>
+                      <span className="text-blue-600 bg-blue-100 px-2 py-1 rounded text-xs font-mono">
+                        v2.1.0
+                      </span>
+                    </div>
+                    <div className="mt-2 text-xs text-blue-600">
+                      Last updated: {new Date().toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
 
