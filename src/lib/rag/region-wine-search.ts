@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createServiceClient } from '@/lib/supabase/server'
 
 interface WineResult {
   wine_name: string
@@ -14,7 +14,7 @@ interface WineResult {
  * Follows the relationship chain: region -> appellation -> wines
  */
 export async function searchWinesByRegion(regionName: string): Promise<WineResult[]> {
-  const supabase = createClient()
+  const supabase = createServiceClient()
 
   console.log('Searching for wines in region:', regionName)
 
@@ -23,7 +23,7 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
     const { data: region, error: regionError } = await supabase
       .from('countries_regions')
       .select('region_id')
-      .ilike('region_name', regionName)
+      .ilike('wine_region', regionName)
       .single()
 
     console.log('Region found:', region ? 1 : 0)
@@ -102,7 +102,7 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
  * Follows the relationship chain: country -> region -> appellation -> wines
  */
 export async function searchWinesByCountryRegion(countryName: string, regionName: string): Promise<WineResult[]> {
-  const supabase = createClient()
+  const supabase = createServiceClient()
 
   console.log('Searching for wines in region:', regionName, 'of country:', countryName)
 
@@ -112,7 +112,7 @@ export async function searchWinesByCountryRegion(countryName: string, regionName
       .from('countries_regions')
       .select('region_id')
       .eq('country_name', countryName)
-      .ilike('region_name', regionName)
+      .ilike('wine_region', regionName)
       .single()
 
     console.log('Specific region found:', region ? 1 : 0)
