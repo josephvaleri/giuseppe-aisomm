@@ -11,7 +11,7 @@ interface WineResult {
 
 /**
  * Search for wines from a specific region
- * Follows the relationship chain: region -> appellation -> wines
+ * Simple logic: countries_regions.wine_region -> region_id -> wines.region_id
  */
 export async function searchWinesByRegion(regionName: string): Promise<WineResult[]> {
   const supabase = createServiceClient()
@@ -24,45 +24,26 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
       .from('countries_regions')
       .select('region_id')
       .ilike('wine_region', regionName)
-      .single()
 
-    console.log('Region found:', region ? 1 : 0)
+    console.log('Region found:', region?.length || 0)
 
     if (regionError) {
       console.error('Error fetching region:', regionError)
       return []
     }
 
-    if (!region) {
+    if (!region || region.length === 0) {
       console.log('No region found for:', regionName)
       return []
     }
 
-    // Step 2: Find all appellation_ids within this region
-    const { data: appellations, error: appellationsError } = await supabase
-      .from('appellation')
-      .select('appellation_id, appellation')
-      .eq('region_id', region.region_id)
+    const regionIds = region.map(r => r.region_id)
 
-    console.log('Appellations found for region:', appellations?.length || 0)
-
-    if (appellationsError) {
-      console.error('Error fetching appellations for region:', appellationsError)
-      return []
-    }
-
-    if (!appellations || appellations.length === 0) {
-      console.log('No appellations found for region:', regionName)
-      return []
-    }
-
-    const appellationIds = appellations.map(a => a.appellation_id)
-
-    // Step 3: Find all wines from these appellations
+    // Step 2: Find all wines from these regions
     const { data: wines, error: winesError } = await supabase
       .from('wines')
-      .select('wine_name, producer, vintage, color, alcohol, region_id')
-      .in('region_id', appellationIds)
+      .select('wine_name, producer, vintage, color, alcohol')
+      .in('region_id', regionIds)
 
     console.log('Wines found for region:', wines?.length || 0)
 
@@ -76,19 +57,13 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
       return []
     }
 
-    // Map appellation names to wines
-    const wineAppellationMap = new Map<number, string>()
-    for (const appellation of appellations) {
-      wineAppellationMap.set(appellation.appellation_id, appellation.appellation)
-    }
-
     return wines.map(wine => ({
       wine_name: wine.wine_name,
       producer: wine.producer,
       vintage: wine.vintage || 'NV',
       color: wine.color || 'Not specified',
       alcohol: wine.alcohol || 'Not specified',
-      appellation: wineAppellationMap.get(wine.region_id) || 'Unknown'
+      appellation: regionName // Use the region name as appellation
     }))
 
   } catch (error) {
@@ -99,7 +74,8 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
 
 /**
  * Search for wines from a specific region of a country
- * Follows the relationship chain: country -> region -> appellation -> wines
+ * Simple logic: countries_regions.wine_region + country_name -> region_id -> wines.region_id
+ * If region not found, fallback to country: countries_regions.country_name -> country_id -> wines.country_id
  */
 export async function searchWinesByCountryRegion(countryName: string, regionName: string): Promise<WineResult[]> {
   const supabase = createServiceClient()
@@ -107,68 +83,86 @@ export async function searchWinesByCountryRegion(countryName: string, regionName
   console.log('Searching for wines in region:', regionName, 'of country:', countryName)
 
   try {
-    // Step 1: Find the specific region_id for the country and region name
+    // Step 1: Try to find the specific region_id for the country and region name
     const { data: region, error: regionError } = await supabase
       .from('countries_regions')
       .select('region_id')
       .eq('country_name', countryName)
       .ilike('wine_region', regionName)
-      .single()
 
-    console.log('Specific region found:', region ? 1 : 0)
+    console.log('Specific region found:', region?.length || 0)
 
     if (regionError) {
       console.error('Error fetching specific region:', regionError)
       return []
     }
 
-    if (!region) {
-      console.log('No specific region found for:', regionName, 'in', countryName)
+    if (region && region.length > 0) {
+      // Found region, get wines by region_id
+      const regionIds = region.map(r => r.region_id)
+      
+      const { data: wines, error: winesError } = await supabase
+        .from('wines')
+        .select('wine_name, producer, vintage, color, alcohol')
+        .in('region_id', regionIds)
+
+      console.log('Wines found for region:', wines?.length || 0)
+
+      if (winesError) {
+        console.error('Error fetching wines for region:', winesError)
+        return []
+      }
+
+      if (wines && wines.length > 0) {
+        return wines.map(wine => ({
+          wine_name: wine.wine_name,
+          producer: wine.producer,
+          vintage: wine.vintage || 'NV',
+          color: wine.color || 'Not specified',
+          alcohol: wine.alcohol || 'Not specified',
+          appellation: `${regionName}, ${countryName}`
+        }))
+      }
+    }
+
+    // Step 2: Fallback to country search if region not found or no wines
+    console.log('Region not found or no wines, trying country fallback')
+    
+    const { data: country, error: countryError } = await supabase
+      .from('countries_regions')
+      .select('country_id')
+      .eq('country_name', countryName)
+
+    console.log('Country found:', country?.length || 0)
+
+    if (countryError) {
+      console.error('Error fetching country:', countryError)
       return []
     }
 
-    // Step 2: Find all appellation_ids within this specific region
-    const { data: appellations, error: appellationsError } = await supabase
-      .from('appellation')
-      .select('appellation_id, appellation')
-      .eq('region_id', region.region_id)
-
-    console.log('Appellations found for region:', appellations?.length || 0)
-
-    if (appellationsError) {
-      console.error('Error fetching appellations for region:', appellationsError)
+    if (!country || country.length === 0) {
+      console.log('No country found for:', countryName)
       return []
     }
 
-    if (!appellations || appellations.length === 0) {
-      console.log('No appellations found for region:', regionName)
-      return []
-    }
+    const countryIds = country.map(c => c.country_id)
 
-    const appellationIds = appellations.map(a => a.appellation_id)
-
-    // Step 3: Find all wines from these appellations
+    // Step 3: Find all wines from this country
     const { data: wines, error: winesError } = await supabase
       .from('wines')
-      .select('wine_name, producer, vintage, color, alcohol, region_id')
-      .in('region_id', appellationIds)
+      .select('wine_name, producer, vintage, color, alcohol')
+      .in('country_id', countryIds)
 
-    console.log('Wines found for region:', wines?.length || 0)
+    console.log('Wines found for country:', wines?.length || 0)
 
     if (winesError) {
-      console.error('Error fetching wines for region:', winesError)
+      console.error('Error fetching wines for country:', winesError)
       return []
     }
 
     if (!wines || wines.length === 0) {
-      console.log('No wines found for region:', regionName)
+      console.log('No wines found for country:', countryName)
       return []
-    }
-
-    // Map appellation names to wines
-    const wineAppellationMap = new Map<number, string>()
-    for (const appellation of appellations) {
-      wineAppellationMap.set(appellation.appellation_id, appellation.appellation)
     }
 
     return wines.map(wine => ({
@@ -177,7 +171,7 @@ export async function searchWinesByCountryRegion(countryName: string, regionName
       vintage: wine.vintage || 'NV',
       color: wine.color || 'Not specified',
       alcohol: wine.alcohol || 'Not specified',
-      appellation: wineAppellationMap.get(wine.region_id) || 'Unknown'
+      appellation: countryName
     }))
 
   } catch (error) {
