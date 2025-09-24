@@ -73,7 +73,10 @@ export async function searchAppellationsByRegion(regionName: string): Promise<Ap
  * Logic: countries_regions.wine_region + country_name -> region_id -> appellation.region_id -> appellation.appellation
  * If region not found, fallback to country: countries_regions.country_name -> country_id -> appellation.country_id
  */
-export async function searchAppellationsByCountryRegion(countryName: string, regionName: string): Promise<{appellations: AppellationResult[], usedFallback: boolean}> {
+export async function searchAppellationsByCountryRegion(
+  countryName: string, 
+  regionName: string
+): Promise<{appellations: AppellationResult[], usedFallback: boolean}> {
   const supabase = createServiceClient()
 
   console.log('Searching for appellations in region:', regionName, 'of country:', countryName)
