@@ -211,7 +211,7 @@ export function formatAppellationResults(
 
   let response: string
   if (isCountryFallback) {
-    response = `I cannot find a wine region in ${countryName} called ${regionName}, that might be an appellation inside a region. Here is a list of appellations in ${countryName}:\n\n`
+    response = `I cannot find a wine region in ${countryName} by that name, it may be an appellation inside a region. Here is a list of appellations in ${countryName}:\n\n`
   } else {
     const location = countryName ? `${regionName} of ${countryName}` : regionName
     response = `Here are the wine appellations from ${location}:\n\n`
