@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { LinearModel } from './train'
-import { QuestionFeatures, RetrievalFeatures, RouteFeatures, featuresToVector } from './features'
+import { extractQuestionFeatures, extractRetrievalFeatures, featuresToVector } from './features'
 
 export interface IntentScores {
   pairing: number

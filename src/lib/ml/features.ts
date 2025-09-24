@@ -142,3 +142,37 @@ export function extractIntentFeatures(question: string) {
                     intentScores.geographic > 0 ? 1 : 0
   }
 }
+
+export function featuresToVector(features: any): number[] {
+  if (Array.isArray(features)) {
+    return features
+  }
+  
+  // Convert object features to array
+  return [
+    features.question_length || 0,
+    features.word_count || 0,
+    features.wine_keywords || 0,
+    features.food_keywords || 0,
+    features.technical_terms || 0,
+    features.geographic_terms || 0,
+    features.complexity_score || 0,
+    features.is_question ? 1 : 0
+  ]
+}
+
+export function loadEntityDictionaries() {
+  // Placeholder function - can be implemented later
+  return {}
+}
+
+export function extractRouteFeatures(questionFeatures: any, retrievalFeatures: any, canAnswer: boolean) {
+  return [
+    questionFeatures.wine_keywords || 0,
+    questionFeatures.technical_terms || 0,
+    questionFeatures.geographic_terms || 0,
+    questionFeatures.complexity_score || 0,
+    canAnswer ? 1 : 0,
+    questionFeatures.is_question ? 1 : 0
+  ]
+}

@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server'
-import { QuestionFeatures, RetrievalFeatures, RouteFeatures, featuresToVector } from './features'
+import { featuresToVector } from './features'
 
 export interface ModelWeights {
   [key: string]: number
