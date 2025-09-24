@@ -91,7 +91,7 @@ export default function GrapeDetail({ grapeId, onBack }: GrapeDetailProps) {
         </div>
 
         {/* Grape Image */}
-        {grapeInfo.image_url ? (
+        {grapeInfo.image_url && grapeInfo.image_url !== 'NULL' && grapeInfo.image_url !== null ? (
           <div className="flex justify-center">
             <div className="relative w-48 h-48 rounded-lg overflow-hidden shadow-lg">
               <Image

@@ -156,7 +156,7 @@ export async function getGrapeInfo(grapeId: number): Promise<GrapeInfo | null> {
       const appellationIds = appellationData.map(item => item.appellation_id)
       
       const { data: appellationNames, error: namesError } = await supabase
-        .from('appellations')
+        .from('appellation')
         .select('appellation')
         .in('appellation_id', appellationIds)
       
