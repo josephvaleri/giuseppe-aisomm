@@ -146,7 +146,7 @@ function AdminPageContent() {
               <div className="flex items-center space-x-4">
                 <h1 className="text-3xl font-bold text-amber-900">Admin Dashboard</h1>
                 <span className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded">
-                  v1.001
+                  v1.002
                 </span>
               </div>
               <p className="text-amber-700">Manage Giuseppe the AISomm settings</p>
