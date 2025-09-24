@@ -38,8 +38,8 @@ function ModerationPageContent() {
       // First get moderation items
       const { data: moderationData, error: moderationError } = await supabase
         .from('moderation_items')
-        .select('item_id, qa_id, status, created_at')
-        .order('created_at', { ascending: false })
+        .select('item_id, qa_id, status, updated_at')
+        .order('updated_at', { ascending: false })
 
       console.log('Moderation data:', moderationData)
       console.log('Moderation error:', moderationError)
@@ -86,7 +86,7 @@ function ModerationPageContent() {
           question: qaItem?.question || 'Unknown question',
           answer: qaItem?.answer || 'Unknown answer',
           status: moderationItem.status,
-          created_at: qaItem?.created_at || moderationItem.created_at,
+          created_at: qaItem?.created_at || moderationItem.updated_at,
           user_email: userEmail || 'Unknown'
         }
       })
