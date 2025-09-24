@@ -102,10 +102,22 @@ export async function POST(request: NextRequest) {
     let source: 'db' | 'openai' = 'db' // Default to database first
     let avatarState: 'ANSWERING' | 'ERROR' = 'ANSWERING'
 
-    // Prioritize database answers - lower threshold for database usage
-    if (dbResult.canAnswer && (routeScore > 0.3 || dbResult.answer.length > 50)) {
+    // Check if we have a high-quality database answer
+    const hasHighQualityAnswer = dbResult.canAnswer && (routeScore > 0.3 || dbResult.answer.length > 50)
+    const isGenericFallback = dbResult.canAnswer && routeScore <= 0.3 && (
+      dbResult.answer.includes('Here are some appellations I found') ||
+      dbResult.answer.includes('Here are some grapes I found') ||
+      dbResult.answer.includes('Here are some wines I found')
+    )
+    
+    if (hasHighQualityAnswer && !isGenericFallback) {
       // Use database synthesis
       answer = dbResult.answer
+      source = 'db'
+    } else if (isGenericFallback) {
+      // Generic fallback detected - show error instead
+      answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
+      avatarState = 'ERROR'
       source = 'db'
     } else {
       // Use OpenAI with RAG
