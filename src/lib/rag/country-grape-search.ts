@@ -237,11 +237,12 @@ export function formatGrapeResults(grapeResults: GrapeResult[], countryName: str
   let answer = `Here are the grape varieties commonly used in ${location}:\n\n`
 
   // Group by wine color
-  const redGrapes = grapeResults.filter(g => g.wine_color.toLowerCase().includes('red'))
-  const whiteGrapes = grapeResults.filter(g => g.wine_color.toLowerCase().includes('white'))
+  const redGrapes = grapeResults.filter(g => g.wine_color && g.wine_color.toLowerCase().includes('red'))
+  const whiteGrapes = grapeResults.filter(g => g.wine_color && g.wine_color.toLowerCase().includes('white'))
   const otherGrapes = grapeResults.filter(g => 
-    !g.wine_color.toLowerCase().includes('red') && 
-    !g.wine_color.toLowerCase().includes('white')
+    !g.wine_color || 
+    (!g.wine_color.toLowerCase().includes('red') && 
+     !g.wine_color.toLowerCase().includes('white'))
   )
 
   if (redGrapes.length > 0) {
