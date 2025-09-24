@@ -185,10 +185,10 @@ export function formatAppellationResults(
   let response = `Here are the wine appellations from ${location}:\n\n`
 
   appellations.forEach(app => {
-    response += ` <strong>${app.appellation}</strong>\n`
-    response += `Classification: ${app.classification}\n`
-    response += `Founded: ${app.founded_year}\n`
-    response += `Major grapes: ${app.major_grapes}\n\n`
+    response += ` <strong>${app.appellation}</strong><br/>`
+    response += `Classification: ${app.classification}<br/>`
+    response += `Founded: ${app.founded_year}<br/>`
+    response += `Major grapes: ${app.major_grapes}<br/><br/>`
   })
 
   return response
