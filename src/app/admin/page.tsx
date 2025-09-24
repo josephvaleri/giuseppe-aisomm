@@ -103,6 +103,25 @@ function AdminPageContent() {
     }
   }
 
+  const handlePopulateTrainingData = async () => {
+    try {
+      const response = await fetch('/api/admin/populate-training-data', {
+        method: 'POST',
+      })
+
+      const result = await response.json()
+      
+      if (response.ok) {
+        alert(`Training data populated successfully!\n\nCreated ${result.count} training examples:\n• Reranker: ${result.breakdown.reranker}\n• Route: ${result.breakdown.route}\n• Intent: ${result.breakdown.intent}`)
+      } else {
+        alert(`Error: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error populating training data:', error)
+      alert('Error populating training data')
+    }
+  }
+
   const handleRetrain = async () => {
     try {
       const response = await fetch('/api/admin/retrain', {
@@ -145,9 +164,9 @@ function AdminPageContent() {
             <div>
               <div className="flex items-center space-x-4">
                 <h1 className="text-3xl font-bold text-amber-900">Admin Dashboard</h1>
-                <span className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded">
-                  v1.013
-                </span>
+           <span className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded">
+             v1.014
+           </span>
               </div>
               <p className="text-amber-700">Manage Giuseppe the AISomm settings</p>
             </div>
@@ -280,6 +299,13 @@ function AdminPageContent() {
                     </div>
                   </div>
                 </div>
+
+                <Button
+                  onClick={handlePopulateTrainingData}
+                  className="w-full bg-green-600 hover:bg-green-700 mb-2"
+                >
+                  Populate Training Data
+                </Button>
 
                 <Button
                   onClick={handleRetrain}
