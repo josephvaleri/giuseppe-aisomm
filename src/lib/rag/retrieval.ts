@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 import { searchGrapesByCountry, searchGrapesByRegion, formatGrapeResults } from './country-grape-search'
+import { searchWinesByRegion, searchWinesByCountryRegion, formatWineResults } from './region-wine-search'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -174,6 +175,65 @@ export async function synthesizeFromDB(
         }
       } catch (error) {
         console.error('Error in country grape search:', error)
+      }
+    }
+  }
+
+  // Wine region queries - check for "wines from [region]" or "wines from [region] of [country]"
+  const wineRegionPattern = /wines.*?(?:from|in|of)\s+([A-Za-z\s]+?)(?:\s+of\s+([A-Za-z\s]+))?/i
+  const simpleWineRegionPattern = /wines\s+(?:from|in)\s+([A-Za-z\s]+)/i
+  const wineRegionDetection = /wines.*?(?:from|in|of)\s+([A-Za-z\s]+?)(?:\?|$)/i
+
+  const wineRegionMatch = question.match(wineRegionPattern)
+  const simpleWineRegionMatch = question.match(simpleWineRegionPattern)
+  const wineRegionDetectionMatch = question.match(wineRegionDetection)
+
+  console.log('Wine region match:', wineRegionMatch)
+  console.log('Simple wine region match:', simpleWineRegionMatch)
+  console.log('Wine region detection:', wineRegionDetectionMatch)
+
+  if (wineRegionMatch || simpleWineRegionMatch || wineRegionDetectionMatch) {
+    let regionName, countryName
+
+    // Prioritize wineRegionDetection as it's working correctly
+    if (wineRegionDetectionMatch) {
+      regionName = wineRegionDetectionMatch[1]?.trim()
+      countryName = null
+    } else if (wineRegionMatch) {
+      regionName = wineRegionMatch[1]?.trim()
+      countryName = wineRegionMatch[2]?.trim() || null
+    } else if (simpleWineRegionMatch) {
+      regionName = simpleWineRegionMatch[1]?.trim()
+      countryName = null
+    }
+
+    console.log('Wine region name:', regionName)
+    console.log('Wine country name:', countryName)
+
+    if (regionName) {
+      try {
+        let wineResults
+        if (countryName && countryName !== regionName) {
+          // Region of country query
+          console.log('Searching for region wines:', regionName, 'of', countryName)
+          wineResults = await searchWinesByCountryRegion(countryName, regionName)
+        } else {
+          // Region query
+          console.log('Searching for region wines:', regionName)
+          wineResults = await searchWinesByRegion(regionName)
+        }
+
+        console.log('Wine results:', wineResults.length, 'wines found')
+
+        if (wineResults.length > 0) {
+          const answer = formatWineResults(wineResults, regionName, countryName)
+          console.log('Returning region-specific wine answer')
+          return { answer, canAnswer: true }
+        } else {
+          console.log('No wines found for region')
+        }
+      } catch (error) {
+        console.error('Error in wine region search:', error)
       }
     }
   }
