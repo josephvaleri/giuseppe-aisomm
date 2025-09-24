@@ -135,14 +135,15 @@ export async function synthesizeFromDB(
   if (countryMatch || simpleMatch || countryDetection) {
     let regionName, countryName
     
-    if (countryMatch) {
+    // Prioritize countryDetection as it's working correctly
+    if (countryDetection) {
+      countryName = countryDetection[1]?.trim()
+      regionName = null
+    } else if (countryMatch) {
       regionName = countryMatch[1]?.trim()
       countryName = countryMatch[2]?.trim() || countryMatch[1]?.trim()
     } else if (simpleMatch) {
       countryName = simpleMatch[1]?.trim()
-      regionName = null
-    } else if (countryDetection) {
-      countryName = countryDetection[1]?.trim()
       regionName = null
     }
     
