@@ -33,33 +33,57 @@ function ModerationPageContent() {
 
   const loadModerationItems = async () => {
     try {
-      const { data, error } = await supabase
+      // First get moderation items
+      const { data: moderationData, error: moderationError } = await supabase
         .from('moderation_items')
-        .select(`
-          item_id,
-          qa_id,
-          status,
-          created_at,
-          questions_answers!moderation_items_qa_id_fkey(
-            question,
-            answer,
-            created_at,
-            user_id,
-            profiles!questions_answers_user_id_fkey(email)
-          )
-        `)
+        .select('item_id, qa_id, status, created_at')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (moderationError) throw moderationError
 
-      const formattedData = (data || []).map((item: any) => ({
-        id: item.qa_id,
-        question: item.questions_answers?.question || 'Unknown question',
-        answer: item.questions_answers?.answer || 'Unknown answer',
-        status: item.status,
-        created_at: item.questions_answers?.created_at || item.created_at,
-        user_email: item.questions_answers?.profiles?.email || 'Unknown'
-      }))
+      if (!moderationData || moderationData.length === 0) {
+        setItems([])
+        setIsLoading(false)
+        return
+      }
+
+      // Get the qa_ids
+      const qaIds = moderationData.map(item => item.qa_id)
+
+      // Get questions_answers data
+      const { data: qaData, error: qaError } = await supabase
+        .from('questions_answers')
+        .select('qa_id, question, answer, created_at, user_id')
+        .in('qa_id', qaIds)
+
+      if (qaError) throw qaError
+
+      // Get user emails
+      const userIds = [...new Set(qaData?.map(qa => qa.user_id) || [])]
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, email')
+        .in('user_id', userIds)
+
+      if (profileError) throw profileError
+
+      // Create a map of user_id to email
+      const userEmailMap = new Map(profileData?.map(profile => [profile.user_id, profile.email]) || [])
+
+      // Combine the data
+      const formattedData = moderationData.map(moderationItem => {
+        const qaItem = qaData?.find(qa => qa.qa_id === moderationItem.qa_id)
+        const userEmail = qaItem ? userEmailMap.get(qaItem.user_id) : 'Unknown'
+
+        return {
+          id: moderationItem.qa_id,
+          question: qaItem?.question || 'Unknown question',
+          answer: qaItem?.answer || 'Unknown answer',
+          status: moderationItem.status,
+          created_at: qaItem?.created_at || moderationItem.created_at,
+          user_email: userEmail || 'Unknown'
+        }
+      })
 
       setItems(formattedData)
     } catch (error) {
