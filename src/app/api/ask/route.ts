@@ -145,14 +145,14 @@ export async function POST(request: NextRequest) {
     
     console.log('Wine topic check:', { question, isWineRelated, hasHighQualityAnswer, isGenericFallback, routeScore })
     
-    if (hasHighQualityAnswer && !isGenericFallback) {
-      // Use database synthesis
-      answer = dbResult.answer
-      source = 'db'
-    } else if (isGenericFallback) {
-      // Generic fallback detected - show error instead
+    if (isGenericFallback || (!isWineRelated && dbResult.canAnswer)) {
+      // Generic fallback or non-wine topic with database answer - show error
       answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
       avatarState = 'ERROR'
+      source = 'db'
+    } else if (hasHighQualityAnswer && !isGenericFallback) {
+      // Use database synthesis
+      answer = dbResult.answer
       source = 'db'
     } else if (isWineRelated) {
       // Use OpenAI with RAG
