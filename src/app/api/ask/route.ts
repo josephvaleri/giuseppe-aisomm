@@ -150,6 +150,30 @@ export async function POST(request: NextRequest) {
       answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
       avatarState = 'ERROR'
       source = 'db'
+    } else if (isWineRelated && (question.toLowerCase().includes('pair') || question.toLowerCase().includes('go well') || question.toLowerCase().includes('match') || question.toLowerCase().includes('food'))) {
+      // Wine-related food pairing questions should use OpenAI
+      try {
+        const context = rerankedChunks.slice(0, 3).map(c => c.chunk)
+        const userPrompt = buildUserPrompt(question, context)
+        
+        const completion = await openai.chat.completions.create({
+          model: process.env.GIUSEPPE_OPENAI_MODEL || 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: GIUSEPPE_SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
+          ],
+          max_tokens: parseInt(process.env.GIUSEPPE_MAX_TOKENS || '800'),
+          temperature: parseFloat(process.env.GIUSEPPE_TEMPERATURE || '0.7')
+        })
+
+        answer = completion.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response.'
+        source = 'openai'
+      } catch (error) {
+        console.error('OpenAI error:', error)
+        avatarState = 'ERROR'
+        answer = 'Mi dispiace, ho avuto un problema tecnico. *(I\'m sorry, I had a technical problem.)*\n\nPlease try asking your question again.'
+        source = 'openai'
+      }
     } else if (hasHighQualityAnswer && !isGenericFallback) {
       // Use database synthesis
       answer = dbResult.answer
