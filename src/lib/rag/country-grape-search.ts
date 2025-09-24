@@ -16,12 +16,16 @@ interface GrapeResult {
 export async function searchGrapesByCountry(countryName: string): Promise<GrapeResult[]> {
   const supabase = createClient()
   
+  console.log('Searching for grapes in country:', countryName)
+  
   try {
     // Step 1: Find all region_ids for the country
     const { data: regions, error: regionsError } = await supabase
       .from('countries_regions')
       .select('region_id')
       .eq('country_name', countryName)
+
+    console.log('Regions found:', regions?.length || 0)
 
     if (regionsError) {
       console.error('Error fetching regions:', regionsError)

@@ -115,27 +115,40 @@ export async function synthesizeFromDB(
   const lowerQuestion = question.toLowerCase()
   
   // Country/Region grape queries - check for "grapes used in [country]" or "grapes used in [region] of [country]"
-  const countryGrapePattern = /(?:what|which|what are the) grapes (?:are )?(?:used in|grown in|found in) (?:the )?([^,]+?)(?: of ([^?]+))?/i
+  const countryGrapePattern = /(?:what|which|what are the) grapes (?:are )?(?:used in|grown in|found in|commonly used in) (?:the )?([^,]+?)(?: of ([^?]+))?/i
   const countryMatch = question.match(countryGrapePattern)
+  
+  console.log('Question:', question)
+  console.log('Country match:', countryMatch)
   
   if (countryMatch) {
     const regionName = countryMatch[1]?.trim()
     const countryName = countryMatch[2]?.trim() || countryMatch[1]?.trim()
+    
+    console.log('Region name:', regionName)
+    console.log('Country name:', countryName)
     
     if (countryName) {
       try {
         let grapeResults
         if (regionName && countryName !== regionName) {
           // Region of country query
+          console.log('Searching for region grapes:', regionName, 'in', countryName)
           grapeResults = await searchGrapesByRegion(countryName, regionName)
         } else {
           // Country query
+          console.log('Searching for country grapes:', countryName)
           grapeResults = await searchGrapesByCountry(countryName)
         }
         
+        console.log('Grape results:', grapeResults.length, 'grapes found')
+        
         if (grapeResults.length > 0) {
           const answer = formatGrapeResults(grapeResults, countryName, regionName !== countryName ? regionName : undefined)
+          console.log('Returning country-specific answer')
           return { answer, canAnswer: true }
+        } else {
+          console.log('No grapes found for country/region')
         }
       } catch (error) {
         console.error('Error in country grape search:', error)
