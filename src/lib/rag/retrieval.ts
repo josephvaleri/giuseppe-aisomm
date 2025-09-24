@@ -115,10 +115,10 @@ export async function synthesizeFromDB(
   const lowerQuestion = question.toLowerCase()
   
   // Country/Region grape queries - check for "grapes used in [country]" or "grapes used in [region] of [country]"
-  const countryGrapePattern = /(?:what|which|what are the) grapes (?:are )?(?:used in|grown in|found in|commonly used in) (?:the )?([^,]+?)(?: of ([^?]+))?/i
+  const countryGrapePattern = /grapes.*?(?:used in|grown in|found in|commonly used in|in)\s+([^,?]+?)(?:\s+of\s+([^?]+))?/i
   
   // Also check for simpler patterns like "grapes in [country]"
-  const simpleCountryPattern = /grapes (?:in|from) ([^?]+)/i
+  const simpleCountryPattern = /grapes\s+(?:in|from)\s+([^?]+)/i
   const countryMatch = question.match(countryGrapePattern)
   const simpleMatch = question.match(simpleCountryPattern)
   
