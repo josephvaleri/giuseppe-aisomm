@@ -102,6 +102,26 @@ function ModerationPageContent() {
 
   const updateStatus = async (id: number, status: string, editedAnswer?: string) => {
     try {
+      // Get current user for moderation decision tracking
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      // Store moderation decision for model retraining
+      const { error: decisionError } = await supabase
+        .from('moderation_decisions')
+        .insert({
+          qa_id: id,
+          moderator_id: user.id,
+          decision: status,
+          edited_answer: editedAnswer || null,
+          moderation_notes: status === 'edited' ? 'Answer was edited by moderator' : null
+        })
+
+      if (decisionError) {
+        console.error('Error storing moderation decision:', decisionError)
+        // Continue anyway - don't block the moderation process
+      }
+
       // Update the moderation item status
       const { error: moderationError } = await supabase
         .from('moderation_items')

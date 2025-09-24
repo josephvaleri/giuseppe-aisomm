@@ -272,6 +272,14 @@ function AdminPageContent() {
                 </Button>
                 
                 <Button
+                  onClick={() => router.push('/admin/moderation-decisions')}
+                  variant="outline"
+                  className="w-full border-amber-300"
+                >
+                  Moderation Decisions
+                </Button>
+                
+                <Button
                   onClick={() => router.push('/admin/roles')}
                   variant="outline"
                   className="w-full border-amber-300"
