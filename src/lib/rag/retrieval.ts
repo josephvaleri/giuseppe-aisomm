@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 import { searchGrapesByCountry, searchGrapesByRegion, formatGrapeResults } from './country-grape-search'
-import { searchWinesByRegion, searchWinesByCountryRegion, formatWineResults } from './region-wine-search'
+import { searchAppellationsByRegion, searchAppellationsByCountryRegion, formatAppellationResults } from './region-wine-search'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -197,28 +197,28 @@ export async function synthesizeFromDB(
 
     if (regionName) {
       try {
-        let wineResults
+        let appellationResults
         if (countryName && countryName !== regionName) {
           // Region of country query
-          console.log('Searching for region wines:', regionName, 'of', countryName)
-          wineResults = await searchWinesByCountryRegion(countryName, regionName)
+          console.log('Searching for region appellations:', regionName, 'of', countryName)
+          appellationResults = await searchAppellationsByCountryRegion(countryName, regionName)
         } else {
           // Region query
-          console.log('Searching for region wines:', regionName)
-          wineResults = await searchWinesByRegion(regionName)
+          console.log('Searching for region appellations:', regionName)
+          appellationResults = await searchAppellationsByRegion(regionName)
         }
 
-        console.log('Wine results:', wineResults.length, 'wines found')
+        console.log('Appellation results:', appellationResults.length, 'appellations found')
 
-        if (wineResults.length > 0) {
-          const answer = formatWineResults(wineResults, regionName, countryName)
-          console.log('Returning region-specific wine answer')
+        if (appellationResults.length > 0) {
+          const answer = formatAppellationResults(appellationResults, regionName, countryName)
+          console.log('Returning region-specific appellation answer')
           return { answer, canAnswer: true }
         } else {
-          console.log('No wines found for region')
+          console.log('No appellations found for region')
         }
       } catch (error) {
-        console.error('Error in wine region search:', error)
+        console.error('Error in appellation region search:', error)
       }
     }
   }

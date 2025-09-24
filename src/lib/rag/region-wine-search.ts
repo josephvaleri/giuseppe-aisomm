@@ -1,22 +1,20 @@
 import { createServiceClient } from '@/lib/supabase/server'
 
-interface WineResult {
-  wine_name: string
-  producer: string
-  vintage: string
-  color: string
-  alcohol: string
+interface AppellationResult {
   appellation: string
+  classification: string
+  founded_year: string
+  major_grapes: string
 }
 
 /**
- * Search for wines from a specific region
- * Simple logic: countries_regions.wine_region -> region_id -> wines.region_id
+ * Search for appellations from a specific region
+ * Logic: countries_regions.wine_region -> region_id -> appellation.region_id -> appellation.appellation
  */
-export async function searchWinesByRegion(regionName: string): Promise<WineResult[]> {
+export async function searchAppellationsByRegion(regionName: string): Promise<AppellationResult[]> {
   const supabase = createServiceClient()
 
-  console.log('Searching for wines in region:', regionName)
+  console.log('Searching for appellations in region:', regionName)
 
   try {
     // Step 1: Find the region_id for the region name
@@ -39,48 +37,46 @@ export async function searchWinesByRegion(regionName: string): Promise<WineResul
 
     const regionIds = region.map(r => r.region_id)
 
-    // Step 2: Find all wines from these regions
-    const { data: wines, error: winesError } = await supabase
-      .from('wines')
-      .select('wine_name, producer, vintage, color, alcohol')
+    // Step 2: Find all appellations from these regions
+    const { data: appellations, error: appellationsError } = await supabase
+      .from('appellation')
+      .select('appellation, classification, founded_year, major_grapes')
       .in('region_id', regionIds)
 
-    console.log('Wines found for region:', wines?.length || 0)
+    console.log('Appellations found for region:', appellations?.length || 0)
 
-    if (winesError) {
-      console.error('Error fetching wines for region:', winesError)
+    if (appellationsError) {
+      console.error('Error fetching appellations for region:', appellationsError)
       return []
     }
 
-    if (!wines || wines.length === 0) {
-      console.log('No wines found for region:', regionName)
+    if (!appellations || appellations.length === 0) {
+      console.log('No appellations found for region:', regionName)
       return []
     }
 
-    return wines.map(wine => ({
-      wine_name: wine.wine_name,
-      producer: wine.producer,
-      vintage: wine.vintage || 'NV',
-      color: wine.color || 'Not specified',
-      alcohol: wine.alcohol || 'Not specified',
-      appellation: regionName // Use the region name as appellation
+    return appellations.map(app => ({
+      appellation: app.appellation,
+      classification: app.classification || 'Not specified',
+      founded_year: app.founded_year || 'Unknown',
+      major_grapes: app.major_grapes || 'Various'
     }))
 
   } catch (error) {
-    console.error('Unhandled error in searchWinesByRegion:', error)
+    console.error('Unhandled error in searchAppellationsByRegion:', error)
     return []
   }
 }
 
 /**
- * Search for wines from a specific region of a country
- * Simple logic: countries_regions.wine_region + country_name -> region_id -> wines.region_id
- * If region not found, fallback to country: countries_regions.country_name -> country_id -> wines.country_id
+ * Search for appellations from a specific region of a country
+ * Logic: countries_regions.wine_region + country_name -> region_id -> appellation.region_id -> appellation.appellation
+ * If region not found, fallback to country: countries_regions.country_name -> country_id -> appellation.country_id
  */
-export async function searchWinesByCountryRegion(countryName: string, regionName: string): Promise<WineResult[]> {
+export async function searchAppellationsByCountryRegion(countryName: string, regionName: string): Promise<AppellationResult[]> {
   const supabase = createServiceClient()
 
-  console.log('Searching for wines in region:', regionName, 'of country:', countryName)
+  console.log('Searching for appellations in region:', regionName, 'of country:', countryName)
 
   try {
     // Step 1: Try to find the specific region_id for the country and region name
@@ -98,35 +94,33 @@ export async function searchWinesByCountryRegion(countryName: string, regionName
     }
 
     if (region && region.length > 0) {
-      // Found region, get wines by region_id
+      // Found region, get appellations by region_id
       const regionIds = region.map(r => r.region_id)
       
-      const { data: wines, error: winesError } = await supabase
-        .from('wines')
-        .select('wine_name, producer, vintage, color, alcohol')
+      const { data: appellations, error: appellationsError } = await supabase
+        .from('appellation')
+        .select('appellation, classification, founded_year, major_grapes')
         .in('region_id', regionIds)
 
-      console.log('Wines found for region:', wines?.length || 0)
+      console.log('Appellations found for region:', appellations?.length || 0)
 
-      if (winesError) {
-        console.error('Error fetching wines for region:', winesError)
+      if (appellationsError) {
+        console.error('Error fetching appellations for region:', appellationsError)
         return []
       }
 
-      if (wines && wines.length > 0) {
-        return wines.map(wine => ({
-          wine_name: wine.wine_name,
-          producer: wine.producer,
-          vintage: wine.vintage || 'NV',
-          color: wine.color || 'Not specified',
-          alcohol: wine.alcohol || 'Not specified',
-          appellation: `${regionName}, ${countryName}`
+      if (appellations && appellations.length > 0) {
+        return appellations.map(app => ({
+          appellation: app.appellation,
+          classification: app.classification || 'Not specified',
+          founded_year: app.founded_year || 'Unknown',
+          major_grapes: app.major_grapes || 'Various'
         }))
       }
     }
 
-    // Step 2: Fallback to country search if region not found or no wines
-    console.log('Region not found or no wines, trying country fallback')
+    // Step 2: Fallback to country search if region not found or no appellations
+    console.log('Region not found or no appellations, trying country fallback')
     
     const { data: country, error: countryError } = await supabase
       .from('countries_regions')
@@ -147,74 +141,55 @@ export async function searchWinesByCountryRegion(countryName: string, regionName
 
     const countryIds = country.map(c => c.country_id)
 
-    // Step 3: Find all wines from this country
-    const { data: wines, error: winesError } = await supabase
-      .from('wines')
-      .select('wine_name, producer, vintage, color, alcohol')
+    // Step 3: Find all appellations from this country
+    const { data: appellations, error: appellationsError } = await supabase
+      .from('appellation')
+      .select('appellation, classification, founded_year, major_grapes')
       .in('country_id', countryIds)
 
-    console.log('Wines found for country:', wines?.length || 0)
+    console.log('Appellations found for country:', appellations?.length || 0)
 
-    if (winesError) {
-      console.error('Error fetching wines for country:', winesError)
+    if (appellationsError) {
+      console.error('Error fetching appellations for country:', appellationsError)
       return []
     }
 
-    if (!wines || wines.length === 0) {
-      console.log('No wines found for country:', countryName)
+    if (!appellations || appellations.length === 0) {
+      console.log('No appellations found for country:', countryName)
       return []
     }
 
-    return wines.map(wine => ({
-      wine_name: wine.wine_name,
-      producer: wine.producer,
-      vintage: wine.vintage || 'NV',
-      color: wine.color || 'Not specified',
-      alcohol: wine.alcohol || 'Not specified',
-      appellation: countryName
+    return appellations.map(app => ({
+      appellation: app.appellation,
+      classification: app.classification || 'Not specified',
+      founded_year: app.founded_year || 'Unknown',
+      major_grapes: app.major_grapes || 'Various'
     }))
 
   } catch (error) {
-    console.error('Unhandled error in searchWinesByCountryRegion:', error)
+    console.error('Unhandled error in searchAppellationsByCountryRegion:', error)
     return []
   }
 }
 
-export function formatWineResults(
-  wines: WineResult[],
+export function formatAppellationResults(
+  appellations: AppellationResult[],
   regionName: string,
   countryName?: string
 ): string {
-  if (wines.length === 0) {
-    return `I couldn't find any wines from ${countryName ? `${regionName} of ${countryName}` : regionName}.`
+  if (appellations.length === 0) {
+    return `I couldn't find any appellations from ${countryName ? `${regionName} of ${countryName}` : regionName}.`
   }
 
   const location = countryName ? `${regionName} of ${countryName}` : regionName
-  let response = `Here are some wines from ${location}:\n\n`
+  let response = `Here are the wine appellations from ${location}:\n\n`
 
-  // Group by color
-  const redWines = wines.filter(w => w.color && w.color.toLowerCase().includes('red'))
-  const whiteWines = wines.filter(w => w.color && w.color.toLowerCase().includes('white'))
-  const otherWines = wines.filter(w => 
-    !w.color || 
-    (!w.color.toLowerCase().includes('red') && 
-     !w.color.toLowerCase().includes('white'))
-  )
-
-  if (redWines.length > 0) {
-    const redWineNames = redWines.map(wine => `${wine.wine_name} (${wine.producer}, ${wine.vintage})`).join(', ')
-    response += `Red Wines: ${redWineNames}\n\n`
-  }
-
-  if (whiteWines.length > 0) {
-    const whiteWineNames = whiteWines.map(wine => `${wine.wine_name} (${wine.producer}, ${wine.vintage})`).join(', ')
-    response += `White Wines: ${whiteWineNames}\n\n`
-  }
-
-  if (otherWines.length > 0) {
-    const otherWineNames = otherWines.map(wine => `${wine.wine_name} (${wine.producer}, ${wine.vintage})`).join(', ')
-    response += `Other Wines: ${otherWineNames}\n\n`
-  }
+  appellations.forEach(app => {
+    response += `**${app.appellation}**\n`
+    response += `Classification: ${app.classification}\n`
+    response += `Founded: ${app.founded_year}\n`
+    response += `Major grapes: ${app.major_grapes}\n\n`
+  })
 
   return response
 }
