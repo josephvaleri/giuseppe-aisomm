@@ -33,15 +33,21 @@ function ModerationPageContent() {
 
   const loadModerationItems = async () => {
     try {
+      console.log('Loading moderation items...')
+      
       // First get moderation items
       const { data: moderationData, error: moderationError } = await supabase
         .from('moderation_items')
         .select('item_id, qa_id, status, created_at')
         .order('created_at', { ascending: false })
 
+      console.log('Moderation data:', moderationData)
+      console.log('Moderation error:', moderationError)
+
       if (moderationError) throw moderationError
 
       if (!moderationData || moderationData.length === 0) {
+        console.log('No moderation items found')
         setItems([])
         setIsLoading(false)
         return
@@ -85,6 +91,7 @@ function ModerationPageContent() {
         }
       })
 
+      console.log('Formatted data:', formattedData)
       setItems(formattedData)
     } catch (error) {
       console.error('Error loading moderation items:', error)
