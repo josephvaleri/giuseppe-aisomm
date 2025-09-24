@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
+import { searchGrapesByCountry, searchGrapesByRegion, formatGrapeResults } from './country-grape-search'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -112,6 +113,35 @@ export async function synthesizeFromDB(
 ): Promise<{ answer: string; canAnswer: boolean }> {
   const supabase = createServiceClient()
   const lowerQuestion = question.toLowerCase()
+  
+  // Country/Region grape queries - check for "grapes used in [country]" or "grapes used in [region] of [country]"
+  const countryGrapePattern = /(?:what|which|what are the) grapes (?:are )?(?:used in|grown in|found in) (?:the )?([^,]+?)(?: of ([^?]+))?/i
+  const countryMatch = question.match(countryGrapePattern)
+  
+  if (countryMatch) {
+    const regionName = countryMatch[1]?.trim()
+    const countryName = countryMatch[2]?.trim() || countryMatch[1]?.trim()
+    
+    if (countryName) {
+      try {
+        let grapeResults
+        if (regionName && countryName !== regionName) {
+          // Region of country query
+          grapeResults = await searchGrapesByRegion(countryName, regionName)
+        } else {
+          // Country query
+          grapeResults = await searchGrapesByCountry(countryName)
+        }
+        
+        if (grapeResults.length > 0) {
+          const answer = formatGrapeResults(grapeResults, countryName, regionName !== countryName ? regionName : undefined)
+          return { answer, canAnswer: true }
+        }
+      } catch (error) {
+        console.error('Error in country grape search:', error)
+      }
+    }
+  }
   
   // Enhanced grape queries - check for specific grape names
   if (lowerQuestion.includes('grape') || lowerQuestion.includes('variety') || 
