@@ -18,3 +18,4 @@ export function useBlink(min = 2400, max = 5200) {
   }, [min, max]);
   return blink;
 }
+

@@ -27,3 +27,4 @@ export function useSpeaking(threshold = 0.055) {
 
   return { speaking, mouthOpen };
 }
+

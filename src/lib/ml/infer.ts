@@ -150,6 +150,7 @@ export class MLInference {
     routeFeatures: RouteFeatures
   ): Promise<number> {
     if (!this.routeModel) {
+      console.log('No route model loaded, using fallback')
       // Fallback to rule-based
       if (routeFeatures.can_answer_from_joins && retrievalFeatures.retr_top1_score > 0.7) {
         return 0.8
@@ -157,13 +158,33 @@ export class MLInference {
       return 0.3
     }
 
-    const features = featuresToVector({
-      ...questionFeatures,
-      ...retrievalFeatures,
-      ...routeFeatures
-    })
+    try {
+      const features = featuresToVector({
+        ...questionFeatures,
+        ...retrievalFeatures,
+        ...routeFeatures
+      })
 
-    return this.routeModel.predict(features)
+      const prediction = this.routeModel.predict(features)
+      
+      // Check for NaN or invalid values
+      if (isNaN(prediction) || !isFinite(prediction)) {
+        console.warn('ML prediction returned NaN, using fallback')
+        if (routeFeatures.can_answer_from_joins && retrievalFeatures.retr_top1_score > 0.7) {
+          return 0.8
+        }
+        return 0.3
+      }
+      
+      return prediction
+    } catch (error) {
+      console.error('Error in ML prediction:', error)
+      // Fallback to rule-based
+      if (routeFeatures.can_answer_from_joins && retrievalFeatures.retr_top1_score > 0.7) {
+        return 0.8
+      }
+      return 0.3
+    }
   }
 
   async shouldRedirectNonWine(intentScores: IntentScores, threshold = 0.7): Promise<boolean> {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -41,6 +41,7 @@ export default function HomePageContent() {
   const [imageError, setImageError] = useState(false)
   const [grapeVarieties, setGrapeVarieties] = useState<string[]>([])
   const [selectedGrapeId, setSelectedGrapeId] = useState<number | null>(null)
+  const [welcomeMessage, setWelcomeMessage] = useState<string>('')
   
   const recognitionRef = useRef<any>(null)
   const supabase = createClient()
@@ -48,12 +49,29 @@ export default function HomePageContent() {
   useEffect(() => {
     loadAvatarUrls()
     loadGrapeVarieties()
+    loadWelcomeMessage()
   }, [])
+
+  // Load welcome message from settings
+  const loadWelcomeMessage = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('announcement')
+        .single()
+
+      if (error) throw error
+      setWelcomeMessage(data?.announcement || '')
+    } catch (error) {
+      console.error('Error loading welcome message:', error)
+    }
+  }
 
   // Load grape varieties for linking
   const loadGrapeVarieties = async () => {
     try {
       const varieties = await getAllGrapeVarieties()
+      console.log('Loaded grape varieties:', varieties.length, 'varieties')
       setGrapeVarieties(varieties)
     } catch (error) {
       console.error('Error loading grape varieties:', error)
@@ -232,26 +250,17 @@ export default function HomePageContent() {
   }
 
   const formatAnswer = (content: string) => {
-    // Detect grape names and create links
-    const grapeMatches = detectGrapeNames(content, grapeVarieties)
+    // First, convert markdown links to HTML
+    let linkedContent = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #7c2d12; text-decoration: underline;">$1</a>')
     
-    // For now, we'll create a simple version without async linking
-    // The full async version would require state management for linked content
-    let linkedContent = content
-    
-    if (grapeMatches.length > 0) {
-      // Create simple links without grape IDs for now
-      const sortedMatches = grapeMatches.sort((a, b) => b.grape_variety.length - a.grape_variety.length)
-      
-      for (const match of sortedMatches) {
-        const regex = new RegExp(`\\b${match.grape_variety}\\b`, 'gi')
-        linkedContent = linkedContent.replace(regex, `<span class="grape-link" data-grape-name="${match.grape_variety}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`)
-      }
-    }
-
     // Split by lines and format
     const lines = linkedContent.split('\n')
     return lines.map((line, index) => {
+      // Skip empty lines
+      if (line.trim() === '') {
+        return <br key={index} />
+      }
+      
       if (line.startsWith('*(') && line.endsWith(')*')) {
         return (
           <em key={index} className="text-amber-600 italic">
@@ -260,51 +269,82 @@ export default function HomePageContent() {
         )
       }
       
-      // Check if line contains grape links
-      if (line.includes('grape-link')) {
+      // Handle bullet points with grape linking
+      if (line.startsWith('•')) {
         return (
-          <span 
-            key={index}
-            dangerouslySetInnerHTML={{ __html: line }}
-            onClick={async (e) => {
-              const target = e.target as HTMLElement
-              if (target.classList.contains('grape-link')) {
-                const grapeName = target.getAttribute('data-grape-name')
-                if (grapeName) {
-                  // Get grape ID from database
-                  const { data } = await supabase
-                    .from('grapes')
-                    .select('grape_id')
-                    .eq('grape_variety', grapeName)
-                    .single()
-                  
-                  if (data?.grape_id) {
-                    handleGrapeClick(data.grape_id)
-                  }
-                }
-              }
-            }}
-          />
-        )
-      }
-      
-      // Check if line contains HTML tags
-      if (line.includes('<') && line.includes('>')) {
-        return (
-          <span 
-            key={index}
-            dangerouslySetInnerHTML={{ __html: line }}
-          />
+          <div key={index} className="mb-1">
+            <GrapeLinkedText text={line} />
+          </div>
         )
       }
       
       return (
-        <span key={index}>
-          {line}
-          {index < lines.length - 1 && <br />}
-        </span>
+        <div key={index} className="mb-1">
+          <GrapeLinkedText text={line} />
+        </div>
       )
     })
+  }
+
+  // Component to handle grape linking with bulletproof logic
+  const GrapeLinkedText = ({ text }: { text: string }) => {
+    const [processedText, setProcessedText] = useState(text)
+    const [isProcessed, setIsProcessed] = useState(false)
+    
+    useEffect(() => {
+      // Only process if we have grape varieties and haven't processed yet
+      if (grapeVarieties.length > 0 && !isProcessed && !text.includes('data-grape-name=')) {
+        const grapeMatches = detectGrapeNames(text, grapeVarieties)
+        
+        if (grapeMatches.length > 0) {
+          let linkedText = text
+          
+          // Process matches in order of length (longest first)
+          const sortedMatches = grapeMatches.sort((a, b) => b.grape_variety.length - a.grape_variety.length)
+          
+          for (const match of sortedMatches) {
+            if (grapeVarieties.includes(match.grape_variety)) {
+              const regex = new RegExp(`\\b${match.grape_variety.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
+              const replacement = `<span class="grape-link" data-grape-name="${match.grape_variety}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`
+              linkedText = linkedText.replace(regex, replacement)
+            }
+          }
+          
+          setProcessedText(linkedText)
+          setIsProcessed(true)
+        }
+      }
+    }, [text, grapeVarieties, isProcessed])
+    
+    // If text contains HTML, render it safely
+    if (processedText.includes('<span class="grape-link"')) {
+      return (
+        <span 
+          dangerouslySetInnerHTML={{ __html: processedText }}
+          onClick={async (e) => {
+            const target = e.target as HTMLElement
+            if (target.classList.contains('grape-link')) {
+              const grapeName = target.getAttribute('data-grape-name')
+              if (grapeName) {
+                // Get grape ID from database
+                const { data } = await supabase
+                  .from('grapes')
+                  .select('grape_id')
+                  .eq('grape_variety', grapeName)
+                  .single()
+                
+                if (data?.grape_id) {
+                  handleGrapeClick(data.grape_id)
+                }
+              }
+            }
+          }}
+        />
+      )
+    }
+    
+    // Otherwise, render as plain text
+    return <span>{processedText}</span>
   }
 
   return (
@@ -411,8 +451,20 @@ export default function HomePageContent() {
               ) : (
                 <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 h-full">
                   <div className="space-y-4">
-                    <AnimatePresence>
-                      {answers.map((answer) => (
+                    {answers.length === 0 && welcomeMessage ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="p-6 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg border border-amber-200"
+                      >
+                        <div className="prose prose-amber max-w-none">
+                          <div dangerouslySetInnerHTML={{ __html: welcomeMessage }} />
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <AnimatePresence>
+                        {answers.map((answer) => (
                         <motion.div
                           key={answer.id}
                           initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -430,7 +482,6 @@ export default function HomePageContent() {
                               <div className="flex items-center gap-2 pt-2 border-t border-amber-200">
                                 <span className="text-sm text-amber-600">Was this helpful?</span>
                                 <span className="text-xs text-gray-500">(ID: {answer.qaId})</span>
-                                {console.log('Rendering feedback buttons for answer:', answer.id, 'qaId:', answer.qaId, 'feedback state:', feedback[answer.id], 'isDisabled:', (feedback[answer.id] === true || feedback[answer.id] === false))}
                                 <div className="flex gap-1">
                                   <button
                                     type="button"
@@ -475,8 +526,9 @@ export default function HomePageContent() {
                             )}
                           </div>
                         </motion.div>
-                      ))}
-                    </AnimatePresence>
+                        ))}
+                      </AnimatePresence>
+                    )}
                   </div>
                 </Card>
               )}

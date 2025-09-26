@@ -16,37 +16,30 @@ export interface GrapeMatch {
   grape_id: number
 }
 
-// Function to detect grape names in text with fuzzy matching
+// Function to detect grape names in text with bulletproof logic
 export function detectGrapeNames(text: string, grapeVarieties: string[]): GrapeMatch[] {
   const matches: GrapeMatch[] = []
-  const words = text.split(/\s+/)
+  const processedText = text.toLowerCase()
   
-  for (const word of words) {
-    // Remove punctuation and convert to lowercase for matching
-    const cleanWord = word.replace(/[^\w]/g, '').toLowerCase()
+  // Sort grapes by length (longest first) to prioritize multi-word grapes
+  const sortedGrapes = grapeVarieties.sort((a, b) => b.length - a.length)
+  
+  for (const grape of sortedGrapes) {
+    const cleanGrape = grape.toLowerCase()
+    const regex = new RegExp(`\\b${cleanGrape.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
     
-    for (const grape of grapeVarieties) {
-      const cleanGrape = grape.toLowerCase()
+    // Check if this grape exists in the text
+    if (regex.test(text)) {
+      // Mark this grape as found
+      matches.push({
+        grape_variety: grape,
+        confidence: 1.0,
+        grape_id: 0 // Will be filled in later
+      })
       
-      // Exact match
-      if (cleanWord === cleanGrape) {
-        matches.push({
-          grape_variety: grape,
-          confidence: 1.0,
-          grape_id: 0 // Will be filled in later
-        })
-        continue
-      }
-      
-      // Fuzzy matching for partial matches
-      const similarity = calculateSimilarity(cleanWord, cleanGrape)
-      if (similarity >= 0.9) {
-        matches.push({
-          grape_variety: grape,
-          confidence: similarity,
-          grape_id: 0 // Will be filled in later
-        })
-      }
+      // CRITICAL: Remove this grape from the text to prevent partial matches
+      // This prevents "Moscato" from being detected when "Moscato Rosa" is already found
+      text = text.replace(regex, '___PLACEHOLDER___')
     }
   }
   
@@ -203,7 +196,7 @@ export async function createGrapeLinks(text: string, grapeMatches: GrapeMatch[])
   
   for (const match of sortedMatches) {
     if (match.grape_id > 0) {
-      const regex = new RegExp(`\\b${match.grape_variety}\\b`, 'gi')
+      const regex = new RegExp(`\\b${match.grape_variety.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
       linkedText = linkedText.replace(regex, `<span class="grape-link" data-grape-id="${match.grape_id}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`)
     }
   }

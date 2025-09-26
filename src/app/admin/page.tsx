@@ -410,6 +410,22 @@ function AdminPageContent() {
                 </Button>
                 
                 <Button
+                  onClick={() => router.push('/admin/documents')}
+                  variant="outline"
+                  className="w-full border-amber-300"
+                >
+                  Document Management
+                </Button>
+                
+                <Button
+                  onClick={() => router.push('/admin/functional-areas')}
+                  variant="outline"
+                  className="w-full border-amber-300"
+                >
+                  Functional Areas
+                </Button>
+                
+                <Button
                   onClick={() => router.push('/admin/users')}
                   variant="outline"
                   className="w-full border-amber-300"
