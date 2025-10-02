@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 import { searchGrapesByCountry, searchGrapesByRegion, formatGrapeResults } from './country-grape-search'
 import { searchAppellationsByRegion, searchAppellationsByCountryRegion, formatAppellationResults } from './region-wine-search'
+import { formatAsParagraph, validateParagraph, toParagraphFallback } from '@/lib/formatting/narrative'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -712,7 +713,7 @@ function formatGrapeVarieties(rows: any[], question: string): string {
     grapeFields.forEach(field => {
       if (row[field]) {
         const grapes = row[field].split(/[,;]/).map((g: string) => g.trim()).filter((g: string) => g.length > 0)
-        grapes.forEach(grape => grapeSet.add(grape))
+        grapes.forEach((grape: string) => grapeSet.add(grape))
       }
     })
   })
@@ -967,7 +968,7 @@ function checkConfidenceLevel(results: any[], keyTerms: string[], searchType: st
 }
 
 // Grape search function
-async function searchGrapes(question: string): Promise<{ answer: string; canAnswer: boolean }> {
+async function searchGrapes(question: string): Promise<{ rows: Record<string, unknown>[]; canAnswer: boolean }> {
   const lowerQuestion = question.toLowerCase()
   const supabase = createServiceClient()
   
@@ -1064,7 +1065,7 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
             validGrapes.forEach(grape => {
               grapeSet.add(grape.grape_variety)
             })
-          } else {
+        } else {
             console.log('No valid grapes found or validation error occurred')
           }
         } else {
@@ -1077,17 +1078,28 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
           // Check if this is a specific historical question that requires more than just region grapes
           if (lowerQuestion.includes('dna testing') || lowerQuestion.includes('mistaken for') || lowerQuestion.includes('1990s')) {
             console.log('❌ Historical question detected, region grapes not sufficient, falling back to document search')
-            return { answer: '', canAnswer: false }
+            return { rows: [], canAnswer: false }
           }
           
-          const answer = `Here are the grape varieties grown in ${foundRegion}:\n\n` +
-            Array.from(grapeSet).map(grape => `• ${grape}`).join('\n\n')
+          // Convert to normalized rows
+          const rows = Array.from(grapeSet).map((grape: string) => ({
+            name: grape,
+            grape_variety: grape,
+            wine_color: 'unknown',
+            country: 'Unknown',
+            region: foundRegion,
+            appellations: [],
+            styles: [],
+            typical_profile: [],
+            notes: [],
+            alt_names: []
+          }))
           
           console.log('Returning database answer with canAnswer=true')
-          return { answer, canAnswer: true }
+          return { rows, canAnswer: true }
         } else {
           console.log('No valid grapes found after validation, returning canAnswer=false')
-          return { answer: '', canAnswer: false }
+          return { rows: [], canAnswer: false }
         }
         }
       } catch (error) {
@@ -1143,10 +1155,21 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
           })
           
           if (wineRegions.size > 0) {
-            const answer = `Here are the wine regions that use **${foundKeyword}**:\n\n` +
-              Array.from(wineRegions).map(region => `• ${region}`).join('\n')
+            // Convert to normalized rows
+            const rows = Array.from(wineRegions).map(region => ({
+              name: `${foundKeyword} in ${region}`,
+              grape_variety: foundKeyword,
+              wine_color: 'unknown',
+              country: 'Various',
+              region: region,
+              appellations: [],
+              styles: [],
+              typical_profile: [],
+              notes: [],
+              alt_names: []
+            }))
             
-            return { answer, canAnswer: true }
+            return { rows, canAnswer: true }
           }
         }
       } catch (error) {
@@ -1166,14 +1189,21 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
       const hasHighConfidence = checkConfidenceLevel(data, keyTerms, 'grape', question)
       
       if (hasHighConfidence) {
-        const answer = `Here's what I found about grape varieties:\n\n` +
-          data.map((g: any) => 
-            `**${g.grape_variety}** (${g.wine_color})\n` +
-            `Flavor profile: ${g.flavor || 'Not specified'}\n` +
-            `Notable wines: ${g.notable_wines || 'Various'}\n`
-          ).join('\n')
+        // Convert to normalized rows
+        const rows = data.map((g: any) => ({
+          name: g.grape_variety,
+          grape_variety: g.grape_variety,
+          wine_color: g.wine_color || 'unknown',
+          country: 'Various',
+          region: 'Various',
+          appellations: [],
+          styles: [],
+          typical_profile: g.flavor ? [g.flavor] : [],
+          notes: g.notable_wines ? [g.notable_wines] : [],
+          alt_names: []
+        }))
         
-        return { answer, canAnswer: true }
+        return { rows, canAnswer: true }
       } else {
         console.log('Grape database results do not meet confidence threshold, will fall back to document search')
       }
@@ -1190,14 +1220,21 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
       const hasHighConfidence = checkConfidenceLevel(data, keyTerms, 'grape', question)
       
       if (hasHighConfidence) {
-      const answer = `Here's what I found about grape varieties:\n\n` +
-          data.map((g: any) => 
-          `**${g.grape_variety}** (${g.wine_color})\n` +
-          `Flavor profile: ${g.flavor || 'Not specified'}\n` +
-          `Notable wines: ${g.notable_wines || 'Various'}\n`
-        ).join('\n')
-      
-      return { answer, canAnswer: true }
+        // Convert to normalized rows
+        const rows = data.map((g: any) => ({
+          name: g.grape_variety,
+          grape_variety: g.grape_variety,
+          wine_color: g.wine_color || 'unknown',
+          country: 'Various',
+          region: 'Various',
+          appellations: [],
+          styles: [],
+          typical_profile: g.flavor ? [g.flavor] : [],
+          notes: g.notable_wines ? [g.notable_wines] : [],
+          alt_names: []
+        }))
+        
+        return { rows, canAnswer: true }
       } else {
         console.log('Grape database results do not meet confidence threshold, will fall back to document search')
       }
@@ -1206,11 +1243,11 @@ async function searchGrapes(question: string): Promise<{ answer: string; canAnsw
   
   // If no relevant database results, fall back to document search
   console.log('No relevant grape database results, falling back to document search')
-  return { answer: '', canAnswer: false }
+  return { rows: [], canAnswer: false }
 }
 
 // Country search function
-async function searchCountries(question: string): Promise<{ answer: string; canAnswer: boolean }> {
+async function searchCountries(question: string): Promise<{ rows: Record<string, unknown>[]; canAnswer: boolean }> {
   const lowerQuestion = question.toLowerCase()
   const supabase = createServiceClient()
   
@@ -1271,14 +1308,20 @@ async function searchCountries(question: string): Promise<{ answer: string; canA
         if (simpleData && simpleData.length > 0) {
           const hasHighConfidence = checkConfidenceLevel(simpleData, keyTerms, 'country')
           if (hasHighConfidence) {
-            const answer = `Here's what I found about ${countryName}:\n\n` +
-              simpleData.map((c: any) => 
-                `**${c.country_name}**\n` +
-                `Wine Region: ${c.wine_region || 'Not specified'}\n`
-        ).join('\n')
-      return { answer, canAnswer: true }
-    }
-  }
+            // Convert to normalized rows
+            const rows = simpleData.map((c: any) => ({
+              name: c.country_name,
+              country: c.country_name,
+              region: c.wine_region || 'Not specified',
+              appellations: [],
+              styles: [],
+              typical_profile: [],
+              notes: [],
+              alt_names: []
+            }))
+            return { rows, canAnswer: true }
+          }
+        }
       } else if (countryData && countryData.length > 0) {
         console.log('Enhanced country search results:', countryData)
         
@@ -1308,12 +1351,20 @@ async function searchCountries(question: string): Promise<{ answer: string; canA
           }
         })
         
-        const answer = `Here's what I found about **${countryName}**:\n\n` +
-          `**Wine Regions:**\n${Array.from(regions).map(r => `• ${r}`).join('\n')}\n\n` +
-          `**Key Appellations:**\n${Array.from(appellations).slice(0, 10).map(a => `• ${a}`).join('\n')}\n\n` +
-          `**Major Grape Varieties:**\n${Array.from(grapes).slice(0, 15).map(g => `• ${g}`).join('\n')}`
+        // Convert to normalized rows
+        const rows = [{
+          name: countryName,
+          country: countryName,
+          region: Array.from(regions).join(', '),
+          appellations: Array.from(appellations).slice(0, 10),
+          primary_grapes: Array.from(grapes).slice(0, 15),
+          styles: [],
+          typical_profile: [],
+          notes: [],
+          alt_names: []
+        }]
         
-        return { answer, canAnswer: true }
+        return { rows, canAnswer: true }
       }
     } catch (error) {
       console.error('Error in enhanced country search:', error)
@@ -1329,22 +1380,28 @@ async function searchCountries(question: string): Promise<{ answer: string; canA
     if (data && data.length > 0) {
       const hasHighConfidence = checkConfidenceLevel(data, keyTerms, 'country', question)
       if (hasHighConfidence) {
-        const answer = `Here's what I found about ${countryName}:\n\n` +
-          data.map((c: any) => 
-            `**${c.country_name}**\n` +
-            `Wine Region: ${c.wine_region || 'Not specified'}\n`
-        ).join('\n')
-        return { answer, canAnswer: true }
+        // Convert to normalized rows
+        const rows = data.map((c: any) => ({
+          name: c.country_name,
+          country: c.country_name,
+          region: c.wine_region || 'Not specified',
+          appellations: [],
+          styles: [],
+          typical_profile: [],
+          notes: [],
+          alt_names: []
+        }))
+        return { rows, canAnswer: true }
       }
     }
   }
   
   console.log('No relevant country database results, falling back to document search')
-  return { answer: '', canAnswer: false }
+  return { rows: [], canAnswer: false }
 }
 
 // Region search function
-async function searchRegions(question: string): Promise<{ answer: string; canAnswer: boolean }> {
+async function searchRegions(question: string): Promise<{ rows: Record<string, unknown>[]; canAnswer: boolean }> {
   const lowerQuestion = question.toLowerCase()
   const supabase = createServiceClient()
   
@@ -1442,12 +1499,20 @@ async function searchRegions(question: string): Promise<{ answer: string; canAns
             }
           })
           
-          const answer = `Here's what I found about **${regionName}**:\n\n` +
-            `**Countries:**\n${Array.from(countries).map(c => `• ${c}`).join('\n')}\n\n` +
-            `**Key Appellations:**\n${Array.from(appellations).slice(0, 10).map(a => `• ${a}`).join('\n')}\n\n` +
-            `**Major Grape Varieties:**\n${Array.from(grapes).slice(0, 15).map(g => `• ${g}`).join('\n')}`
-      
-      return { answer, canAnswer: true }
+          // Convert to normalized rows
+          const rows = [{
+            name: regionName,
+            country: Array.from(countries).join(', '),
+            region: regionName,
+            appellations: Array.from(appellations).slice(0, 10),
+            primary_grapes: Array.from(grapes).slice(0, 15),
+            styles: [],
+            typical_profile: [],
+            notes: [],
+            alt_names: []
+          }]
+          
+          return { rows, canAnswer: true }
     }
         
         // Final fallback to simple search
@@ -1459,12 +1524,18 @@ async function searchRegions(question: string): Promise<{ answer: string; canAns
           .limit(5)
         
         if (simpleData && simpleData.length > 0) {
-          const answer = `Here's what I found about ${regionName}:\n\n` +
-            simpleData.map((r: any) => 
-              `**${r.wine_region}**\n` +
-              `Country: ${r.country_name || 'Not specified'}\n`
-            ).join('\n')
-          return { answer, canAnswer: true }
+          // Convert to normalized rows
+          const rows = simpleData.map((r: any) => ({
+            name: r.wine_region,
+            country: r.country_name || 'Not specified',
+            region: r.wine_region,
+            appellations: [],
+            styles: [],
+            typical_profile: [],
+            notes: [],
+            alt_names: []
+          }))
+          return { rows, canAnswer: true }
         }
       } else if (regionData && regionData.length > 0) {
         console.log('Enhanced region search results:', regionData)
@@ -1495,12 +1566,20 @@ async function searchRegions(question: string): Promise<{ answer: string; canAns
           }
         })
         
-        const answer = `Here's what I found about **${regionName}**:\n\n` +
-          `**Countries:**\n${Array.from(countries).map(c => `• ${c}`).join('\n')}\n\n` +
-          `**Key Appellations:**\n${Array.from(appellations).slice(0, 10).map(a => `• ${a}`).join('\n')}\n\n` +
-          `**Major Grape Varieties:**\n${Array.from(grapes).slice(0, 15).map(g => `• ${g}`).join('\n')}`
-      
-      return { answer, canAnswer: true }
+        // Convert to normalized rows
+        const rows = [{
+          name: regionName,
+          country: Array.from(countries).join(', '),
+          region: regionName,
+          appellations: Array.from(appellations).slice(0, 10),
+          primary_grapes: Array.from(grapes).slice(0, 15),
+          styles: [],
+          typical_profile: [],
+          notes: [],
+          alt_names: []
+        }]
+        
+        return { rows, canAnswer: true }
     }
     } catch (error) {
       console.error('Error in enhanced region search:', error)
@@ -1514,21 +1593,27 @@ async function searchRegions(question: string): Promise<{ answer: string; canAns
       .limit(5)
     
     if (data && data.length > 0) {
-      const answer = `Here's what I found about ${regionName}:\n\n` +
-        data.map((r: any) => 
-          `**${r.wine_region}**\n` +
-          `Country: ${r.country_name || 'Not specified'}\n`
-        ).join('\n')
-      return { answer, canAnswer: true }
+      // Convert to normalized rows
+      const rows = data.map((r: any) => ({
+        name: r.wine_region,
+        country: r.country_name || 'Not specified',
+        region: r.wine_region,
+        appellations: [],
+        styles: [],
+        typical_profile: [],
+        notes: [],
+        alt_names: []
+      }))
+      return { rows, canAnswer: true }
     }
   }
   
   console.log('No relevant region database results, falling back to document search')
-  return { answer: '', canAnswer: false }
+  return { rows: [], canAnswer: false }
 }
 
 // Appellation search function
-async function searchAppellations(question: string): Promise<{ answer: string; canAnswer: boolean }> {
+async function searchAppellations(question: string): Promise<{ rows: Record<string, unknown>[]; canAnswer: boolean }> {
   const lowerQuestion = question.toLowerCase()
   const supabase = createServiceClient()
   
@@ -1589,30 +1674,28 @@ async function searchAppellations(question: string): Promise<{ answer: string; c
           .limit(10)
         
         if (simpleData && simpleData.length > 0) {
-          const answer = `Here are some appellations I found:\n\n` +
-            simpleData.map((a: any) => 
-              `**${a.appellation}**\n` +
-              `📍 Location: ${a.geographic_region || 'Not specified'}\n` +
-              `🏛️ Classification: ${a.classification || 'Not specified'}\n` +
-              `🗓️ Founded: ${a.founded_year || 'Unknown'}\n` +
-              `🍷 Major Grapes: ${a.major_grapes || 'Various'}\n` +
-              `🌍 Country: ${a.countries_regions?.country_name || 'Unknown'}\n`
-            ).join('\n')
-          return { answer, canAnswer: true }
+          // Convert to normalized rows
+          const rows = simpleData.map((a: any) => ({
+            name: a.appellation,
+            appellation_type: a.classification || 'Not specified',
+            country: a.countries_regions?.country_name || 'Unknown',
+            region: a.geographic_region || 'Not specified',
+            founded_year: a.founded_year || 'Unknown',
+            primary_grapes: a.major_grapes ? a.major_grapes.split(',').map((g: string) => g.trim()) : [],
+            styles: [],
+            notes: [],
+            typical_profile: [],
+            alt_names: []
+          }))
+          return { rows, canAnswer: true }
         }
       } else if (appellationData && appellationData.length > 0) {
         console.log('Enhanced appellation search results:', appellationData)
         
-        // Extract unique information
-        const countries = new Set<string>()
-        const regions = new Set<string>()
-        const grapes = new Set<string>()
-        
-        appellationData.forEach(app => {
-          if (app.countries_regions) {
-            if (app.countries_regions.country_name) countries.add(app.countries_regions.country_name)
-            if (app.countries_regions.wine_region) regions.add(app.countries_regions.wine_region)
-          }
+        // Convert to normalized rows
+        const rows = appellationData.map((app: any) => {
+          const grapes = new Set<string>()
+          
           if (app.major_grapes) {
             app.major_grapes.split(',').forEach((grape: string) => {
               grapes.add(grape.trim())
@@ -1625,14 +1708,22 @@ async function searchAppellations(question: string): Promise<{ answer: string; c
               }
             })
           }
+          
+          return {
+            name: app.appellation,
+            appellation_type: app.classification || 'Not specified',
+            country: app.countries_regions?.country_name || 'Unknown',
+            region: app.countries_regions?.wine_region || 'Not specified',
+            founded_year: app.founded_year || 'Unknown',
+            primary_grapes: Array.from(grapes),
+            styles: [],
+            notes: [],
+            typical_profile: [],
+            alt_names: []
+          }
         })
         
-        const answer = `Here's what I found about **${appellationName}**:\n\n` +
-          `**Countries:**\n${Array.from(countries).map(c => `• ${c}`).join('\n')}\n\n` +
-          `**Wine Regions:**\n${Array.from(regions).map(r => `• ${r}`).join('\n')}\n\n` +
-          `**Grape Varieties:**\n${Array.from(grapes).slice(0, 15).map(g => `• ${g}`).join('\n')}`
-        
-        return { answer, canAnswer: true }
+        return { rows, canAnswer: true }
       }
     } catch (error) {
       console.error('Error in enhanced appellation search:', error)
@@ -1649,21 +1740,25 @@ async function searchAppellations(question: string): Promise<{ answer: string; c
       .limit(10)
     
     if (data && data.length > 0) {
-      const answer = `Here are some appellations I found:\n\n` +
-        data.map((a: any) => 
-          `**${a.appellation}**\n` +
-          `📍 Location: ${a.geographic_region || 'Not specified'}\n` +
-          `🏛️ Classification: ${a.classification || 'Not specified'}\n` +
-          `🗓️ Founded: ${a.founded_year || 'Unknown'}\n` +
-          `🍷 Major Grapes: ${a.major_grapes || 'Various'}\n` +
-          `🌍 Country: ${a.countries_regions?.country_name || 'Unknown'}\n`
-        ).join('\n')
-      return { answer, canAnswer: true }
+      // Convert to normalized rows
+      const rows = data.map((a: any) => ({
+        name: a.appellation,
+        appellation_type: a.classification || 'Not specified',
+        country: a.countries_regions?.country_name || 'Unknown',
+        region: a.geographic_region || 'Not specified',
+        founded_year: a.founded_year || 'Unknown',
+        primary_grapes: a.major_grapes ? a.major_grapes.split(',').map((g: string) => g.trim()) : [],
+        styles: [],
+        notes: [],
+        typical_profile: [],
+        alt_names: []
+      }))
+      return { rows, canAnswer: true }
     }
   }
   
   console.log('No relevant appellation database results, falling back to document search')
-  return { answer: '', canAnswer: false }
+  return { rows: [], canAnswer: false }
 }
 
 export async function synthesizeFromDB(
@@ -1679,34 +1774,51 @@ export async function synthesizeFromDB(
   const searchType = determineSearchType(question)
   console.log('Search type determined:', searchType)
   
-  let result: { answer: string; canAnswer: boolean } = { answer: '', canAnswer: false }
-  
   // Route to appropriate search function
+  let searchResult: { rows: Record<string, unknown>[]; canAnswer: boolean }
   switch (searchType) {
     case 'grape':
-      result = await searchGrapes(question)
+      searchResult = await searchGrapes(question)
       break
     case 'country':
-      result = await searchCountries(question)
+      searchResult = await searchCountries(question)
       break
     case 'region':
-      result = await searchRegions(question)
+      searchResult = await searchRegions(question)
       break
     case 'appellation':
-      result = await searchAppellations(question)
+      searchResult = await searchAppellations(question)
       break
     default:
       console.log('No specific search type determined, will fall back to document search')
+      searchResult = { rows: [], canAnswer: false }
       break
   }
   
-  // If the specific search didn't find relevant results, fall back to document search
-  if (!result.canAnswer) {
-    console.log('Specific search did not find relevant results, falling back to document search')
-    // Continue to document search and OpenAI fallback
+  // If the specific search found relevant results, format as paragraph
+  if (searchResult.canAnswer && searchResult.rows.length > 0) {
+    console.log('Specific search found relevant results, formatting as paragraph')
+    try {
+      const paragraph = await formatAsParagraph({
+        question,
+        rows: searchResult.rows,
+        domain: 'wine',
+        maxWords: 180
+      })
+      
+      // Validate the paragraph format
+      if (!validateParagraph(paragraph)) {
+        console.warn('Generated paragraph does not meet validation criteria, using fallback')
+        return { answer: toParagraphFallback({ question, rows: searchResult.rows, domain: 'wine', maxWords: 180 }), canAnswer: true }
+      }
+      
+      return { answer: paragraph, canAnswer: true }
+    } catch (error) {
+      console.error('Error formatting paragraph:', error)
+      return { answer: toParagraphFallback({ question, rows: searchResult.rows, domain: 'wine', maxWords: 180 }), canAnswer: true }
+    }
   } else {
-    console.log('Specific search found relevant results, returning answer')
-    return result
+    console.log('Specific search did not find relevant results, falling back to document search')
   }
   
   // If no specific search found relevant results, continue to document search and OpenAI fallback
@@ -1758,14 +1870,34 @@ export async function synthesizeFromDB(
         }
       }
       
-      // Fallback to regular content formatting
-      const combinedContent = documentResults
-        .map(result => result.chunk)
-        .join('\n\n')
+      // Fallback to regular content formatting - convert to normalized rows
+      const rows = documentResults.map(result => ({
+        name: 'Document Content',
+        content: result.chunk,
+        source: result.source || 'document',
+        score: result.score,
+        notes: [],
+        typical_profile: [],
+        alt_names: []
+      }))
       
-      const answer = `Based on my wine knowledge, here's what I can tell you:\n\n${combinedContent}`
-      
-      return { answer, canAnswer: true }
+      try {
+        const paragraph = await formatAsParagraph({
+          question,
+          rows,
+          domain: 'wine',
+          maxWords: 180
+        })
+        
+        return { answer: paragraph, canAnswer: true }
+      } catch (error) {
+        console.error('Error formatting document results as paragraph:', error)
+        const combinedContent = documentResults
+          .map(result => result.chunk)
+          .join('\n\n')
+        const answer = `Based on my wine knowledge, here's what I can tell you:\n\n${combinedContent}`
+        return { answer, canAnswer: true }
+      }
     } else {
       console.log('Document results do not meet confidence threshold, will fall back to OpenAI')
     }
@@ -1775,5 +1907,5 @@ export async function synthesizeFromDB(
   
   // Final fallback to OpenAI
   console.log('=== OPENAI FALLBACK ===')
-  return { answer: '', canAnswer: false, fallbackToOpenAI: true }
+  return { answer: '', canAnswer: false }
 }

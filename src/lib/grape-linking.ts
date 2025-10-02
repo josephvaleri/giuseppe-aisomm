@@ -176,6 +176,11 @@ export async function getGrapeInfo(grapeId: number): Promise<GrapeInfo | null> {
 
 // Function to create clickable links in text
 export async function createGrapeLinks(text: string, grapeMatches: GrapeMatch[]): Promise<string> {
+  // Skip grape linking if text already contains HTML tags or grape links (to prevent double-processing)
+  if (/<[^>]+>/g.test(text) || text.includes('data-grape') || text.includes('grape-link')) {
+    return text
+  }
+  
   let linkedText = text
   
   // Get grape IDs for matches
@@ -196,8 +201,12 @@ export async function createGrapeLinks(text: string, grapeMatches: GrapeMatch[])
   
   for (const match of sortedMatches) {
     if (match.grape_id > 0) {
-      const regex = new RegExp(`\\b${match.grape_variety.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
-      linkedText = linkedText.replace(regex, `<span class="grape-link" data-grape-id="${match.grape_id}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`)
+      // Use a more robust approach for multi-word grape names
+      const escapedGrapeName = match.grape_variety.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // Use word boundaries that work better with multi-word phrases
+      const regex = new RegExp(`(^|[^\\w])${escapedGrapeName}([^\\w]|$)`, 'gi')
+      const replacement = `$1<span class="grape-link" data-grape-id="${match.grape_id}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>$2`
+      linkedText = linkedText.replace(regex, replacement)
     }
   }
   

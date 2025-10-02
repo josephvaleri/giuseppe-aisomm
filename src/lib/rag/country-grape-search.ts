@@ -226,6 +226,77 @@ export async function searchGrapesByRegion(countryName: string, regionName: stri
 }
 
 /**
+ * Normalize grape results to a consistent format for narrative formatting
+ */
+export function normalizeGrapeRows(
+  grapeResults: GrapeResult[], 
+  countryName: string, 
+  regionName?: string
+): Record<string, unknown>[] {
+  if (grapeResults.length === 0) {
+    return []
+  }
+
+  // Group grapes by color for better narrative flow
+  const redGrapes = grapeResults.filter(g => g.wine_color && g.wine_color.toLowerCase().includes('red'))
+  const whiteGrapes = grapeResults.filter(g => g.wine_color && g.wine_color.toLowerCase().includes('white'))
+  const otherGrapes = grapeResults.filter(g => 
+    !g.wine_color || 
+    (!g.wine_color.toLowerCase().includes('red') && 
+     !g.wine_color.toLowerCase().includes('white'))
+  )
+
+  const normalizedRows = []
+
+  if (redGrapes.length > 0) {
+    normalizedRows.push({
+      name: `${regionName || countryName} Red Grapes`,
+      grape_variety: redGrapes.map(g => g.grape_variety),
+      wine_color: 'red',
+      country: countryName,
+      region: regionName,
+      appellations: [...new Set(redGrapes.flatMap(g => g.appellations))],
+      styles: ['dry red'],
+      typical_profile: redGrapes.map(g => g.flavor).filter(Boolean),
+      notes: [],
+      alt_names: []
+    })
+  }
+
+  if (whiteGrapes.length > 0) {
+    normalizedRows.push({
+      name: `${regionName || countryName} White Grapes`,
+      grape_variety: whiteGrapes.map(g => g.grape_variety),
+      wine_color: 'white',
+      country: countryName,
+      region: regionName,
+      appellations: [...new Set(whiteGrapes.flatMap(g => g.appellations))],
+      styles: ['dry white'],
+      typical_profile: whiteGrapes.map(g => g.flavor).filter(Boolean),
+      notes: [],
+      alt_names: []
+    })
+  }
+
+  if (otherGrapes.length > 0) {
+    normalizedRows.push({
+      name: `${regionName || countryName} Other Grapes`,
+      grape_variety: otherGrapes.map(g => g.grape_variety),
+      wine_color: 'other',
+      country: countryName,
+      region: regionName,
+      appellations: [...new Set(otherGrapes.flatMap(g => g.appellations))],
+      styles: ['various'],
+      typical_profile: otherGrapes.map(g => g.flavor).filter(Boolean),
+      notes: [],
+      alt_names: []
+    })
+  }
+
+  return normalizedRows
+}
+
+/**
  * Format grape results into a readable answer
  */
 export function formatGrapeResults(grapeResults: GrapeResult[], countryName: string, regionName?: string): string {

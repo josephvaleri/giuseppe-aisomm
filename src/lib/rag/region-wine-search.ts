@@ -202,6 +202,35 @@ export async function searchAppellationsByCountryRegion(
   }
 }
 
+/**
+ * Normalize appellation results to a consistent format for narrative formatting
+ */
+export function normalizeAppellationRows(
+  appellations: AppellationResult[],
+  regionName: string,
+  countryName?: string
+): Record<string, unknown>[] {
+  if (appellations.length === 0) {
+    return []
+  }
+
+  // Group appellations by region/country for a more cohesive narrative
+  const normalizedRows = appellations.map(app => ({
+    name: app.appellation,
+    appellation_type: app.classification,
+    country: countryName || 'Unknown',
+    region: regionName || 'Unknown',
+    founded_year: app.founded_year,
+    primary_grapes: app.major_grapes ? app.major_grapes.split(',').map(g => g.trim()) : [],
+    styles: [], // Could be enhanced with wine color/style data
+    notes: [],
+    typical_profile: [],
+    alt_names: []
+  }))
+
+  return normalizedRows
+}
+
 export function formatAppellationResults(
   appellations: AppellationResult[],
   regionName: string,
