@@ -1,42 +1,48 @@
 "use client";
-
-import AvatarRive from "@/components/AvatarRive";
+import { useEffect, useState } from "react";
+import { AvatarLayered } from "@/components/AvatarLayered";
 import { useBlink } from "@/hooks/useBlink";
-import { useHeadAim } from "@/hooks/useHeadAim";
-import { useSpeaking } from "@/hooks/useSpeaking";
-
-const RIVE_URL = process.env.NEXT_PUBLIC_GIUSEPPE_RIVE_URL!; // set this in Vercel env
+import { useSpeakingMic } from "@/hooks/useSpeakingMic";
 
 export default function Page() {
-  const blinkNow = useBlink();
-  const { headX, headY } = useHeadAim();
-  const { speaking, mouthOpen } = useSpeaking();
+  const base = "/giuseppe_v3_layers/giuseppe_root/base_open.png";
+  const closed = "/giuseppe_v3_layers/giuseppe_root/eyes_closed.png";
+
+  const { speaking, level } = useSpeakingMic(); // mic -> speaking + rms level
+  const answering = speaking;                   // or tie this to your LLM "answering" state
+  const blinking = useBlink({ speedMultiplier: answering ? 1.35 : 1 });
+
+  // demo UI tint
+  useEffect(() => {
+    document.documentElement.style.setProperty("--accent", answering ? "#2ecc71" : "#6e56cf");
+  }, [answering]);
 
   return (
-    <div className="min-h-screen grid place-items-center p-8 bg-neutral-900">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-8">Giuseppe RIVE Demo</h1>
-        <AvatarRive
-          src={RIVE_URL}
-          className="w-[360px] h-[360px]"
-          blinkNow={blinkNow}
-          speaking={speaking}
-          mouthOpen={mouthOpen}
-          headX={headX}
-          headY={headY}
-          mood={0}
+    <main className="min-h-dvh bg-neutral-950 text-white grid place-items-center p-8">
+      <div className="grid gap-6">
+        <AvatarLayered
+          baseSrc={base}
+          eyesClosedSrc={closed}
+          answering={answering}
+          level={level}
+          blinking={blinking}
+          className="w-72 h-72"
         />
-        <div className="mt-8 text-white">
-          <p className="text-lg mb-4">🎤 Speak to see Giuseppe respond!</p>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>Blinking: {blinkNow ? "👁️" : "👀"}</div>
-            <div>Speaking: {speaking ? "🗣️" : "🤐"}</div>
-            <div>Head X: {headX.toFixed(2)}</div>
-            <div>Head Y: {headY.toFixed(2)}</div>
-          </div>
+        <p className="text-center opacity-80 text-sm">
+          Talking adds audio-reactive bob/tilt + a quick emphasis when speech begins.
+        </p>
+        <div className="grid grid-cols-2 gap-4 text-sm text-center">
+          <div>Blinking: {blinking ? "👁️" : "👀"}</div>
+          <div>Speaking: {answering ? "🗣️" : "🤐"}</div>
+          <div>Level: {level.toFixed(3)}</div>
+          <div>Speed: {answering ? "1.35x" : "1x"}</div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
+
+
+
+
 

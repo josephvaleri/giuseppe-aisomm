@@ -402,6 +402,14 @@ function AdminPageContent() {
                 </Button>
                 
                 <Button
+                  onClick={() => router.push('/admin/animations')}
+                  variant="outline"
+                  className="w-full border-amber-300"
+                >
+                  Animation Settings
+                </Button>
+                
+                <Button
                   onClick={() => router.push('/admin/thinking-images')}
                   variant="outline"
                   className="w-full border-amber-300"

@@ -9,8 +9,11 @@ import { Badge } from '@/components/ui/badge'
 import { Mic, MicOff, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import GiuseppeAvatar from '@/components/GiuseppeAvatar'
+import { AvatarLayered } from '@/components/AvatarLayered'
+import { useBlink } from '@/hooks/useBlink'
+import { useSpeakingMic } from '@/hooks/useSpeakingMic'
 import GrapeDetail from '@/components/GrapeDetail'
+import GrapeLinkedText from '@/components/GrapeLinkedText'
 import { detectGrapeNames, getAllGrapeVarieties, createGrapeLinks, GrapeMatch } from '@/lib/grape-linking'
 
 type AvatarState = 'WAITING' | 'ANSWERING' | 'ERROR'
@@ -45,6 +48,11 @@ export default function HomePageContent() {
   
   const recognitionRef = useRef<any>(null)
   const supabase = createClient()
+  
+  // Audio-reactive hooks for new avatar
+  const answering = avatarState === 'ANSWERING'
+  const blinking = useBlink({ answering }) // Uses configurable settings
+  const level = 0 // No microphone for now
 
   useEffect(() => {
     loadAvatarUrls()
@@ -269,83 +277,15 @@ export default function HomePageContent() {
         )
       }
       
-      // Handle bullet points with grape linking
-      if (line.startsWith('•')) {
-        return (
-          <div key={index} className="mb-1">
-            <GrapeLinkedText text={line} />
-          </div>
-        )
-      }
-      
+      // Always render GrapeLinkedText component to maintain hooks order
       return (
         <div key={index} className="mb-1">
-          <GrapeLinkedText text={line} />
+          <GrapeLinkedText text={line} grapeVarieties={grapeVarieties} onGrapeClick={handleGrapeClick} />
         </div>
       )
     })
   }
 
-  // Component to handle grape linking with bulletproof logic
-  const GrapeLinkedText = ({ text }: { text: string }) => {
-    const [processedText, setProcessedText] = useState(text)
-    const [isProcessed, setIsProcessed] = useState(false)
-    
-    useEffect(() => {
-      // Only process if we have grape varieties and haven't processed yet
-      if (grapeVarieties.length > 0 && !isProcessed && !text.includes('data-grape-name=')) {
-        const grapeMatches = detectGrapeNames(text, grapeVarieties)
-        
-        if (grapeMatches.length > 0) {
-          let linkedText = text
-          
-          // Process matches in order of length (longest first)
-          const sortedMatches = grapeMatches.sort((a, b) => b.grape_variety.length - a.grape_variety.length)
-          
-          for (const match of sortedMatches) {
-            if (grapeVarieties.includes(match.grape_variety)) {
-              const regex = new RegExp(`\\b${match.grape_variety.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
-              const replacement = `<span class="grape-link" data-grape-name="${match.grape_variety}" style="color: #7c2d12; text-decoration: underline; cursor: pointer; font-weight: 500;">${match.grape_variety}</span>`
-              linkedText = linkedText.replace(regex, replacement)
-            }
-          }
-          
-          setProcessedText(linkedText)
-          setIsProcessed(true)
-        }
-      }
-    }, [text, grapeVarieties, isProcessed])
-    
-    // If text contains HTML, render it safely
-    if (processedText.includes('<span class="grape-link"')) {
-      return (
-        <span 
-          dangerouslySetInnerHTML={{ __html: processedText }}
-          onClick={async (e) => {
-            const target = e.target as HTMLElement
-            if (target.classList.contains('grape-link')) {
-              const grapeName = target.getAttribute('data-grape-name')
-              if (grapeName) {
-                // Get grape ID from database
-                const { data } = await supabase
-                  .from('grapes')
-                  .select('grape_id')
-                  .eq('grape_variety', grapeName)
-                  .single()
-                
-                if (data?.grape_id) {
-                  handleGrapeClick(data.grape_id)
-                }
-              }
-            }
-          }}
-        />
-      )
-    }
-    
-    // Otherwise, render as plain text
-    return <span>{processedText}</span>
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
@@ -369,11 +309,13 @@ export default function HomePageContent() {
                 <div className="text-center">
                   {/* Animated Giuseppe Avatar */}
                   <div className="relative mb-4 flex justify-center">
-                    <GiuseppeAvatar 
+                    <AvatarLayered
+                      baseSrc="/giuseppe_v3_layers/giuseppe_root/base_open.png"
+                      eyesClosedSrc="/giuseppe_v3_layers/giuseppe_root/eyes_closed.png"
+                      answering={answering}
+                      level={level}
+                      blinking={blinking}
                       className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
-                      src={getAvatarImage()}
-                      alt="Giuseppe"
-                      isThinking={avatarState === 'ANSWERING'}
                     />
                   </div>
                   

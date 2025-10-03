@@ -14,3 +14,7 @@ export function useHeadAim(speed = 0.18, amp = 0.06) {
   return { headX: Math.max(0, Math.min(1, x)), headY: Math.max(0, Math.min(1, y)) };
 }
 
+
+
+
+

@@ -378,12 +378,12 @@ export async function POST(request: NextRequest) {
     
     if (isAuthenticated) {
       // Check trial status for authenticated users
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, trial_expires_at')
-        .eq('user_id', user.id)
-        .single()
-      
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, trial_expires_at')
+      .eq('user_id', user.id)
+      .single()
+
       if (profile) {
         userRole = profile.role || 'user'
         trialExpired = profile.trial_expires_at ? new Date(profile.trial_expires_at) < new Date() : false
@@ -397,7 +397,7 @@ export async function POST(request: NextRequest) {
     } else {
       // For authenticated users, check trial status
       if (trialExpired && userRole !== 'admin' && userRole !== 'moderator') {
-        return NextResponse.json({ error: 'Trial expired' }, { status: 402 })
+      return NextResponse.json({ error: 'Trial expired' }, { status: 402 })
       }
     }
 
@@ -599,25 +599,25 @@ export async function POST(request: NextRequest) {
     let qaRecord = null
     if (isAuthenticated && user) {
       const { data } = await supabase
-        .from('questions_answers')
-        .insert({
-          user_id: user.id,
-          question,
-          answer: finalAnswer,
-          source,
-          retrieval_debug: {
-            intentScores,
-            retrievalFeatures,
-            routeScore,
-            rerankedChunks: rerankedChunks.slice(0, 3).map(c => ({
-              chunk: c.chunk.substring(0, 200) + '...',
-              score: c.score,
-              originalScore: c.originalScore
-            }))
-          }
-        })
-        .select('qa_id')
-        .single()
+      .from('questions_answers')
+      .insert({
+        user_id: user.id,
+        question,
+        answer: finalAnswer,
+        source,
+        retrieval_debug: {
+          intentScores,
+          retrievalFeatures,
+          routeScore,
+          rerankedChunks: rerankedChunks.slice(0, 3).map(c => ({
+            chunk: c.chunk.substring(0, 200) + '...',
+            score: c.score,
+            originalScore: c.originalScore
+          }))
+        }
+      })
+      .select('qa_id')
+      .single()
       qaRecord = data
     }
 

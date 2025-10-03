@@ -1,21 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAnimationSettings } from "./useAnimationSettings";
 
-export function useBlink(min = 2400, max = 5200) {
+type Opts = {
+  answering?: boolean;
+};
+
+export function useBlink(opts: Opts = {}) {
+  const { answering = false } = opts;
+  const { settings } = useAnimationSettings();
   const [blink, setBlink] = useState(false);
+  const alive = useRef(true);
+
   useEffect(() => {
-    let alive = true, id: any;
-    const schedule = () => {
-      id = setTimeout(() => {
-        if (!alive) return;
+    alive.current = true;
+    let tid: any;
+
+    const loop = () => {
+      // Use configurable speed multiplier when answering
+      const speedMultiplier = answering ? settings.blink_speed_multiplier : 1;
+      const min = Math.max(500, settings.blink_base_min / speedMultiplier);
+      const max = Math.max(min + 1, settings.blink_base_max / speedMultiplier);
+      tid = setTimeout(() => {
+        if (!alive.current) return;
         setBlink(true);
-        requestAnimationFrame(() => setBlink(false));
-        schedule();
+        setTimeout(() => setBlink(false), settings.blink_duration);
+        loop();
       }, Math.floor(Math.random() * (max - min)) + min);
     };
-    schedule();
-    return () => { alive = false; clearTimeout(id); };
-  }, [min, max]);
+
+    loop();
+    return () => { alive.current = false; clearTimeout(tid); };
+  }, [settings.blink_base_min, settings.blink_base_max, settings.blink_duration, settings.blink_speed_multiplier, answering]);
+
   return blink;
 }
+
+
 
