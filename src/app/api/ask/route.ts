@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getMLInference } from '@/lib/ml/infer'
-import { loadEntityDictionaries, extractQuestionFeatures, extractRetrievalFeatures, extractRouteFeatures } from '@/lib/ml/features'
+import { loadEntityDictionaries, extractIntentQuestionFeatures, extractRetrievalFeatures, extractRouteFeatures } from '@/lib/ml/features'
 import { searchDocuments, synthesizeFromDB } from '@/lib/rag/retrieval'
 import { GIUSEPPE_SYSTEM_PROMPT, getRandomItalianStarter, buildUserPrompt } from '@/lib/giuseppe/persona'
 
@@ -376,7 +376,7 @@ export async function POST(request: NextRequest) {
     let userRole = 'guest'
     let trialExpired = false
     
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       // Check trial status for authenticated users
     const { data: profile } = await supabase
       .from('profiles')
@@ -422,8 +422,8 @@ export async function POST(request: NextRequest) {
       loadEntityDictionaries()
     ])
 
-    // Extract question features
-    const questionFeatures = extractQuestionFeatures(question, dicts)
+    // Extract question features with intent classification
+    const questionFeatures = extractIntentQuestionFeatures(question, dicts)
 
     // Predict intent
     const intentScores = await mlInference.predictIntent(questionFeatures)
@@ -509,11 +509,11 @@ export async function POST(request: NextRequest) {
       answer = "I am sorry, I cannot answer this question. Can you please ask your question another way and make sure it is about wine. Grazie"
       avatarState = 'ERROR'
       source = 'db'
-    } else if (isWineRelated && (question.toLowerCase().includes('pair') || question.toLowerCase().includes('go well') || question.toLowerCase().includes('match') || question.toLowerCase().includes('food'))) {
+    } else if (isWineRelated && intentScores.pairing > 0.5) {
       // Wine-related food pairing questions should use OpenAI
       try {
         const context = rerankedChunks.slice(0, 3).map(c => c.chunk)
-        const userPrompt = buildUserPrompt(question, context)
+        const userPrompt = buildUserPrompt(question, context, intentScores)
         
         const completion = await openai.chat.completions.create({
           model: process.env.GIUSEPPE_OPENAI_MODEL || 'gpt-4o-mini',
@@ -537,7 +537,7 @@ export async function POST(request: NextRequest) {
       // Wine-related question with generic fallback OR no relevant database/document results - use OpenAI
       try {
         const context = rerankedChunks.slice(0, 3).map(c => c.chunk)
-        const userPrompt = buildUserPrompt(question, context)
+        const userPrompt = buildUserPrompt(question, context, intentScores)
         
         const completion = await openai.chat.completions.create({
           model: process.env.GIUSEPPE_OPENAI_MODEL || 'gpt-4o-mini',
@@ -565,7 +565,7 @@ export async function POST(request: NextRequest) {
       // Use OpenAI with RAG
       try {
         const context = rerankedChunks.slice(0, 3).map(c => c.chunk)
-        const userPrompt = buildUserPrompt(question, context)
+        const userPrompt = buildUserPrompt(question, context, intentScores)
         
         const completion = await openai.chat.completions.create({
           model: process.env.GIUSEPPE_OPENAI_MODEL || 'gpt-4o-mini',

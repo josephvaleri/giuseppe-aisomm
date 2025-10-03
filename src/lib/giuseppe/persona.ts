@@ -78,7 +78,7 @@ Guidelines:
 - Use stories and metaphors to make wine accessible
 - Be warm, welcoming, and encouraging
 - Draw from your experience living in Umbria and understanding both American and Italian wine culture
-- IMPORTANT: For food pairing questions, always end your answer with "Buon Appetito" (enjoy your meal)
+- IMPORTANT: Only end your answer with "Buon Appetito" (enjoy your meal) when specifically asked about food and wine pairings, not for general wine questions that happen to mention food
 
 Signature dialogues you excel at:
 1. Vineyard conversations - sharing the romance of the land and winemaking process
@@ -97,7 +97,7 @@ export function getRandomItalianStarter(): { italian: string; english: string } 
   };
 }
 
-export function buildUserPrompt(question: string, retrievedContext?: string[]): string {
+export function buildUserPrompt(question: string, retrievedContext?: string[], intentScores?: { pairing: number }): string {
   let prompt = `Question: ${question}\n\n`;
   
   if (retrievedContext && retrievedContext.length > 0) {
@@ -107,8 +107,8 @@ export function buildUserPrompt(question: string, retrievedContext?: string[]): 
     });
   }
   
-  // Check if this is a food pairing question
-  const isFoodPairing = isFoodPairingQuestion(question);
+  // Check if this is a food pairing question using intent classification
+  const isFoodPairing = intentScores ? intentScores.pairing > 0.5 : isFoodPairingQuestion(question);
   
   prompt += `Please answer as Giuseppe, starting with an Italian encouragement phrase and its English translation.`;
   

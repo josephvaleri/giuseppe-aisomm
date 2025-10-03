@@ -122,7 +122,7 @@ export function extractIntentFeatures(question: string) {
     ]
   }
   
-  const intentScores = {}
+  const intentScores: Record<string, number> = {}
   for (const [intent, keywords] of Object.entries(intents)) {
     intentScores[intent] = keywords.filter(keyword => 
       lowerQuestion.includes(keyword)
@@ -159,6 +159,71 @@ export function featuresToVector(features: any): number[] {
     features.complexity_score || 0,
     features.is_question ? 1 : 0
   ]
+}
+
+export function extractIntentQuestionFeatures(question: string, dicts: any = {}) {
+  const lowerQuestion = question.toLowerCase()
+  
+  // Intent-specific keyword detection
+  const intentKeywords = {
+    intent_pairing: [
+      'pair', 'pairing', 'goes with', 'go well with', 'match', 'matches', 'complement', 'complements',
+      'accompany', 'accompanies', 'with', 'food', 'cheese', 'meat', 'fish', 'seafood', 'pasta', 'pizza',
+      'steak', 'chicken', 'pork', 'beef', 'lamb', 'duck', 'dessert', 'appetizer', 'main course',
+      'dinner', 'lunch', 'meal', 'dish', 'recipe', 'cooking', 'dining', 'restaurant', 'sauce',
+      'grilled', 'roasted', 'fried', 'baked', 'raw', 'cooked'
+    ],
+    intent_region: [
+      'region', 'country', 'from', 'where', 'appellation', 'terroir', 'climate', 'soil',
+      'italy', 'italian', 'france', 'french', 'spain', 'spanish', 'germany', 'german',
+      'portugal', 'portuguese', 'greece', 'greek', 'australia', 'australian', 'chile',
+      'chilean', 'argentina', 'argentine', 'south africa', 'south african', 'new zealand',
+      'usa', 'united states', 'american', 'california', 'californian', 'oregon', 'washington',
+      'canada', 'canadian', 'tuscany', 'tuscan', 'piedmont', 'piedmontese', 'umbria',
+      'umbrian', 'burgundy', 'bordeaux', 'rioja', 'chianti', 'barolo', 'brunello'
+    ],
+    intent_grape: [
+      'grape', 'grapes', 'variety', 'varieties', 'chardonnay', 'cabernet', 'merlot', 'pinot',
+      'sauvignon', 'riesling', 'syrah', 'shiraz', 'malbec', 'tempranillo', 'sangiovese',
+      'nebbiolo', 'barbera', 'dolcetto', 'vermentino', 'pinot grigio', 'pinot gris',
+      'gewürztraminer', 'moscato', 'zinfandel', 'grenache', 'mourvedre', 'viognier'
+    ],
+    intent_cellar: [
+      'cellar', 'storage', 'store', 'age', 'aging', 'aged', 'vintage', 'vintages', 'collect',
+      'collection', 'collector', 'investment', 'price', 'value', 'buy', 'purchase',
+      'temperature', 'humidity', 'cork', 'bottle', 'bottles', 'decant', 'decanting',
+      'aerate', 'breathing', 'serving', 'serve'
+    ],
+    intent_recommendation: [
+      'recommend', 'recommendation', 'suggest', 'suggestion', 'best', 'good', 'favorite',
+      'prefer', 'like', 'love', 'enjoy', 'try', 'should i', 'what should', 'help me choose',
+      'advice', 'opinion', 'thoughts'
+    ],
+    intent_joke: [
+      'joke', 'funny', 'humor', 'laugh', 'laughing', 'amusing', 'entertaining', 'silly',
+      'ridiculous', 'absurd', 'comedy', 'comic', 'wit', 'witty', 'clever'
+    ],
+    intent_non_wine: [
+      'beer', 'whiskey', 'whisky', 'vodka', 'gin', 'rum', 'tequila', 'cognac', 'brandy',
+      'liqueur', 'cocktail', 'drink', 'beverage', 'coffee', 'tea', 'water', 'juice',
+      'soda', 'soft drink', 'alcohol', 'spirits', 'liquor'
+    ]
+  }
+  
+  // Calculate intent scores
+  const intentFeatures: Record<string, number> = {}
+  for (const [intent, keywords] of Object.entries(intentKeywords)) {
+    const score = keywords.filter(keyword => lowerQuestion.includes(keyword)).length
+    intentFeatures[intent] = score > 0 ? 1 : 0
+  }
+  
+  // Combine with basic question features
+  const basicFeatures = extractQuestionFeatures(question)
+  
+  return {
+    ...basicFeatures,
+    ...intentFeatures
+  }
 }
 
 export function loadEntityDictionaries() {

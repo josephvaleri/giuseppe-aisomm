@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Mic, MicOff, Send, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { Mic, MicOff, Send, ThumbsUp, ThumbsDown, LogIn, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { AvatarLayered } from '@/components/AvatarLayered'
@@ -15,6 +15,7 @@ import { useSpeakingMic } from '@/hooks/useSpeakingMic'
 import GrapeDetail from '@/components/GrapeDetail'
 import GrapeLinkedText from '@/components/GrapeLinkedText'
 import { detectGrapeNames, getAllGrapeVarieties, createGrapeLinks, GrapeMatch } from '@/lib/grape-linking'
+import { useRouter } from 'next/navigation'
 
 type AvatarState = 'WAITING' | 'ANSWERING' | 'ERROR'
 
@@ -45,9 +46,13 @@ export default function HomePageContent() {
   const [grapeVarieties, setGrapeVarieties] = useState<string[]>([])
   const [selectedGrapeId, setSelectedGrapeId] = useState<number | null>(null)
   const [welcomeMessage, setWelcomeMessage] = useState<string>('')
+  const [user, setUser] = useState<any>(null)
+  const [trialDays, setTrialDays] = useState<number>(7)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
   
   const recognitionRef = useRef<any>(null)
   const supabase = createClient()
+  const router = useRouter()
   
   // Audio-reactive hooks for new avatar
   const answering = avatarState === 'ANSWERING'
@@ -58,7 +63,45 @@ export default function HomePageContent() {
     loadAvatarUrls()
     loadGrapeVarieties()
     loadWelcomeMessage()
+    checkAuth()
+    loadTrialDays()
   }, [])
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  // Check authentication status
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    } catch (error) {
+      console.error('Error checking auth:', error)
+    } finally {
+      setIsAuthLoading(false)
+    }
+  }
+
+  // Load trial days from settings
+  const loadTrialDays = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('trial_days')
+        .single()
+
+      if (error) throw error
+      setTrialDays(data?.trial_days || 7)
+    } catch (error) {
+      console.error('Error loading trial days:', error)
+    }
+  }
 
   // Load welcome message from settings
   const loadWelcomeMessage = async () => {
@@ -287,6 +330,125 @@ export default function HomePageContent() {
   }
 
 
+  // Show loading state while checking authentication
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-2xl">G</span>
+          </div>
+          <p className="text-amber-700">Loading Giuseppe...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Non-authenticated users see Giuseppe on left, login on right
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-amber-900 mb-2">
+                Giuseppe the AISomm
+              </h1>
+              <p className="text-amber-700 text-lg">
+                Your personal wine expert, ready to answer any question
+              </p>
+              {/* Free Trial Message */}
+              <div className="mt-4 p-4 bg-amber-100 border border-amber-300 rounded-lg">
+                <p className="text-amber-800 font-semibold">
+                  🍷 Free {trialDays} Day Trial • No credit card required
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column: Giuseppe */}
+              <div className="flex flex-col space-y-6">
+                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 relative">
+                  <div className="text-center">
+                    {/* Animated Giuseppe Avatar */}
+                    <div className="relative mb-4 flex justify-center">
+                      <AvatarLayered
+                        baseSrc="/giuseppe_v3_layers/giuseppe_root/base_open.png"
+                        eyesClosedSrc="/giuseppe_v3_layers/giuseppe_root/eyes_closed.png"
+                        answering={answering}
+                        level={level}
+                        blinking={blinking}
+                        className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
+                      />
+                    </div>
+                    
+                    <Badge 
+                      variant={avatarState === 'ERROR' ? 'destructive' : 'default'}
+                      className="mb-4"
+                    >
+                      Ready to help
+                    </Badge>
+                    
+                    <p className="text-amber-800 text-sm">
+                      Sign up for your free trial to start asking me questions about wine!
+                    </p>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Right Column: Login/Auth */}
+              <div className="flex flex-col">
+                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 h-full">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-amber-900 mb-2">
+                      Get Started with Giuseppe
+                    </h2>
+                    <p className="text-amber-700">
+                      Sign up for your free trial and start exploring the world of wine
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Button
+                      onClick={() => router.push('/auth')}
+                      className="w-full bg-amber-600 hover:bg-amber-700 py-3"
+                      size="lg"
+                    >
+                      <UserPlus className="w-5 h-5 mr-2" />
+                      Start Free Trial
+                    </Button>
+
+                    <Button
+                      onClick={() => router.push('/auth')}
+                      variant="outline"
+                      className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 py-3"
+                      size="lg"
+                    >
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Sign In
+                    </Button>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-amber-50 rounded-lg">
+                    <h3 className="font-semibold text-amber-900 mb-2">What you get:</h3>
+                    <ul className="text-sm text-amber-700 space-y-1">
+                      <li>• Unlimited wine questions</li>
+                      <li>• Personalized recommendations</li>
+                      <li>• Food pairing suggestions</li>
+                      <li>• Wine education and tips</li>
+                    </ul>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Authenticated users see the full interface
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <div className="container mx-auto px-4 py-8">

@@ -36,8 +36,7 @@ export function Header() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
-      // Redirect to home page after logout
-      window.location.href = '/'
+      // Auth state change will automatically update all components
     } catch (error) {
       console.error('Error signing out:', error)
     }
