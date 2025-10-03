@@ -97,3 +97,4 @@ testQuestions.forEach((question, index) => {
 console.log('Expected results:')
 console.log('- Questions 1-5, 14-15 should be detected as wine questions (specific wines)')
 console.log('- Questions 6-13 should NOT be detected as wine questions (appellations/general)')
+

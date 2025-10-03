@@ -15,6 +15,8 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [trialMessage, setTrialMessage] = useState('')
+  const [trialError, setTrialError] = useState('')
   
   const supabase = createClient()
   const router = useRouter()
@@ -31,7 +33,7 @@ export default function AuthPage() {
     const fullName = formData.get('fullName') as string
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -43,7 +45,23 @@ export default function AuthPage() {
 
       if (error) throw error
 
-      setMessage('Check your email for the confirmation link!')
+      // Set up trial user after successful signup
+      if (data.user) {
+        // Get trial days from admin settings
+        const { data: settings } = await supabase
+          .from('settings')
+          .select('trial_days')
+          .single()
+        
+        const trialDays = settings?.trial_days || 7
+        
+        await supabase.rpc('set_user_trial', {
+          user_id: data.user.id,
+          trial_days: trialDays
+        })
+      }
+
+      setMessage('Check your email for the confirmation link! Your free trial has started.')
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -62,12 +80,40 @@ export default function AuthPage() {
     const password = formData.get('password') as string
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
+
+      // Check trial status after successful login
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, trial_end_date')
+          .eq('user_id', data.user.id)
+          .single()
+
+        if (profile) {
+          const isTrialUser = profile.role === 'trial'
+          const trialEndDate = profile.trial_end_date ? new Date(profile.trial_end_date) : null
+          const now = new Date()
+          
+          if (isTrialUser && trialEndDate) {
+            const isLastDay = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) === 1
+            const isExpired = trialEndDate < now
+            
+            if (isExpired) {
+              setTrialError('Giuseppe is sorry but your free trial has ended. He would love to see you again so please sign up here')
+              return
+            } else if (isLastDay) {
+              setTrialMessage('Today is the last day of your free trial. Click here to sign up')
+              return
+            }
+          }
+        }
+      }
 
       router.push('/')
     } catch (error: any) {
@@ -279,6 +325,35 @@ export default function AuthPage() {
           {error && (
             <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-md">
               <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Trial Messages */}
+          {trialMessage && (
+            <div className="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-md">
+              <p className="text-amber-700 text-sm">
+                {trialMessage.split('Click here to sign up')[0]}
+                <button 
+                  onClick={() => window.open('/pricing', '_blank')}
+                  className="text-amber-800 font-semibold underline hover:text-amber-900"
+                >
+                  Click here to sign up
+                </button>
+              </p>
+            </div>
+          )}
+
+          {trialError && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-md">
+              <p className="text-red-700 text-sm">
+                {trialError.split('please sign up here')[0]}
+                <button 
+                  onClick={() => window.open('/pricing', '_blank')}
+                  className="text-red-800 font-semibold underline hover:text-red-900"
+                >
+                  please sign up here
+                </button>
+              </p>
             </div>
           )}
 

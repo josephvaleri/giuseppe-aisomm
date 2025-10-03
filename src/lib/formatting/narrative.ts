@@ -175,3 +175,4 @@ export function validateParagraph(text: string): boolean {
   return !hasLists && paragraphCount <= 1
 }
 
+
