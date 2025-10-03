@@ -449,8 +449,13 @@ function parseWineListCSV(results: RetrievalResult[], question: string): string 
 const CONFIDENCE_THRESHOLD = 0.7 // 70% confidence threshold - can be adjusted
 
 // Query router function to determine which search to use
-function determineSearchType(question: string): 'grape' | 'country' | 'region' | 'appellation' | 'general' {
+function determineSearchType(question: string): 'grape' | 'country' | 'region' | 'appellation' | 'wine' | 'general' {
   const lowerQuestion = question.toLowerCase()
+  
+  // Wine questions - specific wine with producer or vintage
+  if (isWineQuestion(question)) {
+    return 'wine'
+  }
   
   // Grape variety questions
   if (lowerQuestion.includes('grape') || lowerQuestion.includes('variety') || 
@@ -496,12 +501,131 @@ function determineSearchType(question: string): 'grape' | 'country' | 'region' |
   return 'general'
 }
 
+// Function to detect if a question is about a specific wine
+function isWineQuestion(question: string): boolean {
+  const lowerQuestion = question.toLowerCase()
+  
+  // First, check if this is an appellation question (should NOT be wine question)
+  const appellationPatterns = [
+    'brunello di montalcino', 'barolo', 'barbaresco', 'chianti classico', 'amarone della valpolicella',
+    'valpolicella', 'soave', 'bardolino', 'prosecco', 'franciacorta', 'champagne', 'burgundy',
+    'bordeaux', 'cote du rhone', 'sancerre', 'vouvray', 'rioja', 'ribera del duero', 'cava',
+    'jerez', 'manzanilla', 'montilla', 'porto', 'madeira', 'vinho verde', 'douro', 'alentejo',
+    'tokaj', 'chianti', 'super tuscan' // Note: 'super tuscan' can be both appellation and wine
+  ]
+  
+  const isAppellationQuestion = appellationPatterns.some(pattern => lowerQuestion.includes(pattern))
+  
+  // If it's clearly an appellation question, it's NOT a wine question
+  if (isAppellationQuestion) {
+    return false
+  }
+  
+  // Check for specific wine names (not appellations)
+  const specificWineNames = [
+    // Italian specific wines
+    'cerretalto', 'rubesco', 'sassicaia', 'tignanello', 'solaia', 'ornellaia', 'masseto',
+    'tenuta san guido', 'antinori', 'frescobaldi', 'marchesi antinori',
+    
+    // French specific wines
+    'mouton rothschild', 'chateau lafite', 'chateau margaux', 'chateau latour', 'haut brion',
+    'petrus', 'le pin', 'cheval blanc', 'ausone', 'pavie', 'angelus',
+    'domaine de la romanee conti', 'drc', 'la tache', 'romanee conti',
+    
+    // American specific wines
+    'opus one', 'screaming eagle', 'harlan', 'dominus', 'caymus', 'stags leap',
+    'quintessa', 'caymus', 'stags leap wine cellars', 'ridge monte bello',
+    'heitz cellars', 'spottswoode', 'shafer hillside select', 'dominique laurent',
+    
+    // Australian specific wines
+    'penfolds grange', 'henschke hill of grace', 'vega sicilia unicornio', 'pingus',
+    'clarendon hills', 'greenock creek', 'torbreck', 'two hands',
+    
+    // Spanish specific wines
+    'vega sicilia', 'pingus', 'alvaro palacios', 'artadi', 'remirez de ganuza',
+    
+    // Other regions
+    'sassicaia', 'tignanello', 'solaia', 'ornellaia', 'masseto'
+  ]
+  
+  // Check for vintage patterns (4-digit years)
+  const vintagePattern = /\b(19|20)\d{2}\b/
+  const hasVintage = vintagePattern.test(question)
+  
+  // Check for specific wine name patterns
+  const hasSpecificWineName = specificWineNames.some(pattern => lowerQuestion.includes(pattern))
+  
+  // Check for producer patterns
+  const producerPatterns = [
+    'producer', 'winery', 'estate', 'domaine', 'chateau', 'cantina', 'azienda',
+    'bodega', 'bodegas', 'weingut', 'weingüter', 'vineyard', 'vineyards'
+  ]
+  const hasProducer = producerPatterns.some(pattern => lowerQuestion.includes(pattern))
+  
+  // Check for specific wine question patterns
+  const wineQuestionPatterns = [
+    'tell me about', 'what is', 'tell me about the wine', 'about this wine',
+    'this wine', 'that wine', 'specific wine', 'particular wine'
+  ]
+  const hasWineQuestionPattern = wineQuestionPatterns.some(pattern => lowerQuestion.includes(pattern))
+  
+  // A question is considered a wine question if:
+  // 1. It has a specific wine name AND (producer OR vintage)
+  // 2. It has a wine question pattern AND (specific wine name OR producer)
+  // 3. It has a vintage AND specific wine name
+  return (hasSpecificWineName && (hasProducer || hasVintage)) ||
+         (hasWineQuestionPattern && (hasSpecificWineName || hasProducer)) ||
+         (hasVintage && hasSpecificWineName)
+}
+
 // Function to extract key terms from questions
 function extractKeyTerms(question: string, searchType: string): string[] {
   const lowerQuestion = question.toLowerCase()
   const keyTerms: string[] = []
   
   switch (searchType) {
+    case 'wine':
+      // Extract specific wine names and producers from the question
+      const wineNames = ['cerretalto', 'rubesco', 'sassicaia', 'tignanello', 'solaia', 'ornellaia', 'masseto',
+                        'tenuta san guido', 'antinori', 'frescobaldi', 'marchesi antinori',
+                        'mouton rothschild', 'chateau lafite', 'chateau margaux', 'chateau latour', 'haut brion',
+                        'petrus', 'le pin', 'cheval blanc', 'ausone', 'pavie', 'angelus',
+                        'domaine de la romanee conti', 'drc', 'la tache', 'romanee conti',
+                        'opus one', 'screaming eagle', 'harlan', 'dominus', 'caymus', 'stags leap',
+                        'quintessa', 'caymus', 'stags leap wine cellars', 'ridge monte bello',
+                        'heitz cellars', 'spottswoode', 'shafer hillside select', 'dominique laurent',
+                        'penfolds grange', 'henschke hill of grace', 'vega sicilia unicornio', 'pingus',
+                        'clarendon hills', 'greenock creek', 'torbreck', 'two hands',
+                        'vega sicilia', 'pingus', 'alvaro palacios', 'artadi', 'remirez de ganuza']
+      
+      for (const wineName of wineNames) {
+        if (lowerQuestion.includes(wineName)) {
+          keyTerms.push(wineName)
+        }
+      }
+      
+      // Extract producer names
+      const producers = ['casanova di neri', 'lungorotti', 'antinori', 'tenuta dell\'ornellaia', 'tenuta san guido',
+                        'domaine', 'chateau', 'mouton', 'lafite', 'margaux', 'latour', 'haut brion',
+                        'petrus', 'le pin', 'cheval blanc', 'ausone', 'pavie', 'angelus',
+                        'penfolds', 'henschke', 'vega sicilia', 'dominio de pingus']
+      
+      for (const producer of producers) {
+        if (lowerQuestion.includes(producer)) {
+          keyTerms.push(producer)
+        }
+      }
+      
+      // Extract vintage years
+      const vintagePattern = /\b(19|20)\d{2}\b/
+      const vintageMatch = question.match(vintagePattern)
+      if (vintageMatch) {
+        keyTerms.push(vintageMatch[0])
+      }
+      
+      console.log('Wine key terms extracted:', keyTerms)
+      break
+      
     case 'grape':
       // Extract grape names from the question
       const grapeKeywords = ['chardonnay', 'cabernet', 'merlot', 'pinot', 'sauvignon', 'riesling', 'syrah', 'malbec', 
@@ -1761,6 +1885,203 @@ async function searchAppellations(question: string): Promise<{ rows: Record<stri
   return { rows: [], canAnswer: false }
 }
 
+// Wine search function
+async function searchWines(question: string): Promise<{ rows: Record<string, unknown>[]; canAnswer: boolean }> {
+  const lowerQuestion = question.toLowerCase()
+  const supabase = createServiceClient()
+  
+  console.log('=== WINE SEARCH ===')
+  
+  // Extract key terms for confidence checking
+  const keyTerms = extractKeyTerms(question, 'wine')
+  console.log('Key terms for wine search:', keyTerms)
+  
+  // Extract wine name and producer from question
+  const wineName = extractWineName(question)
+  const producer = extractProducer(question)
+  const vintage = extractVintage(question)
+  
+  console.log('Extracted wine info:', { wineName, producer, vintage })
+  
+  if (!wineName && !producer) {
+    console.log('No wine name or producer found, falling back to document search')
+    return { rows: [], canAnswer: false }
+  }
+  
+  try {
+    // Build search query based on available information
+    let query = supabase.from('wines').select(`
+      wine_id,
+      wine_name,
+      producer,
+      vintage,
+      flavor_profile,
+      alcohol,
+      bottle_size,
+      drink_starting,
+      drink_by,
+      my_score,
+      color,
+      appellation_id,
+      region_id,
+      country_id,
+      appellation!inner(
+        appellation,
+        classification,
+        major_grapes
+      ),
+      countries_regions!inner(
+        country_name,
+        wine_region
+      )
+    `)
+    
+    // Add search conditions
+    if (wineName) {
+      query = query.ilike('wine_name', `%${wineName}%`)
+    }
+    if (producer) {
+      query = query.ilike('producer', `%${producer}%`)
+    }
+    if (vintage) {
+      query = query.eq('vintage', vintage)
+    }
+    
+    const { data: wines, error } = await query.limit(10)
+    
+    if (error) {
+      console.error('Error searching wines:', error)
+      return { rows: [], canAnswer: false }
+    }
+    
+    if (!wines || wines.length === 0) {
+      console.log('No wines found in database')
+      return { rows: [], canAnswer: false }
+    }
+    
+    console.log('Found wines:', wines.length)
+    
+    // Check confidence level of wine results
+    const hasHighConfidence = checkWineConfidence(wines, keyTerms, question)
+    
+    if (hasHighConfidence) {
+      // Convert to normalized rows
+      const rows = wines.map((wine: any) => ({
+        name: wine.wine_name || 'Unknown Wine',
+        wine_name: wine.wine_name,
+        producer: wine.producer,
+        vintage: wine.vintage,
+        flavor_profile: wine.flavor_profile,
+        alcohol: wine.alcohol,
+        bottle_size: wine.bottle_size,
+        drink_starting: wine.drink_starting,
+        drink_by: wine.drink_by,
+        my_score: wine.my_score,
+        color: wine.color,
+        appellation: wine.appellation?.appellation || 'Unknown',
+        classification: wine.appellation?.classification || 'Unknown',
+        major_grapes: wine.appellation?.major_grapes || 'Unknown',
+        country: wine.countries_regions?.country_name || 'Unknown',
+        region: wine.countries_regions?.wine_region || 'Unknown',
+        notes: [],
+        typical_profile: wine.flavor_profile ? [wine.flavor_profile] : [],
+        alt_names: []
+      }))
+      
+      return { rows, canAnswer: true }
+    } else {
+      console.log('Wine database results do not meet confidence threshold, will fall back to document search')
+      return { rows: [], canAnswer: false }
+    }
+  } catch (error) {
+    console.error('Error in wine search:', error)
+    return { rows: [], canAnswer: false }
+  }
+}
+
+// Helper function to extract wine name from question
+function extractWineName(question: string): string | null {
+  const lowerQuestion = question.toLowerCase()
+  
+  // Specific wine names (not appellations)
+  const wineNames = [
+    'cerretalto', 'rubesco', 'sassicaia', 'tignanello', 'solaia', 'ornellaia', 'masseto',
+    'tenuta san guido', 'antinori', 'frescobaldi', 'marchesi antinori',
+    'mouton rothschild', 'chateau lafite', 'chateau margaux', 'chateau latour', 'haut brion',
+    'petrus', 'le pin', 'cheval blanc', 'ausone', 'pavie', 'angelus',
+    'domaine de la romanee conti', 'drc', 'la tache', 'romanee conti',
+    'opus one', 'screaming eagle', 'harlan', 'dominus', 'caymus', 'stags leap',
+    'quintessa', 'caymus', 'stags leap wine cellars', 'ridge monte bello',
+    'heitz cellars', 'spottswoode', 'shafer hillside select', 'dominique laurent',
+    'penfolds grange', 'henschke hill of grace', 'vega sicilia unicornio', 'pingus',
+    'clarendon hills', 'greenock creek', 'torbreck', 'two hands',
+    'vega sicilia', 'pingus', 'alvaro palacios', 'artadi', 'remirez de ganuza'
+  ]
+  
+  for (const wineName of wineNames) {
+    if (lowerQuestion.includes(wineName)) {
+      return wineName
+    }
+  }
+  
+  return null
+}
+
+// Helper function to extract producer from question
+function extractProducer(question: string): string | null {
+  const lowerQuestion = question.toLowerCase()
+  
+  // Common producer patterns
+  const producers = [
+    'casanova di neri', 'lungorotti', 'antinori', 'tenuta dell\'ornellaia', 'tenuta san guido',
+    'domaine', 'chateau', 'mouton', 'lafite', 'margaux', 'latour', 'haut brion',
+    'petrus', 'le pin', 'cheval blanc', 'ausone', 'pavie', 'angelus',
+    'penfolds', 'henschke', 'vega sicilia', 'dominio de pingus'
+  ]
+  
+  for (const producer of producers) {
+    if (lowerQuestion.includes(producer)) {
+      return producer
+    }
+  }
+  
+  return null
+}
+
+// Helper function to extract vintage from question
+function extractVintage(question: string): number | null {
+  const vintagePattern = /\b(19|20)\d{2}\b/
+  const match = question.match(vintagePattern)
+  return match ? parseInt(match[0]) : null
+}
+
+// Helper function to check confidence level for wine results
+function checkWineConfidence(wines: any[], keyTerms: string[], question: string): boolean {
+  if (wines.length === 0) {
+    console.log('No wines found, confidence: 0%')
+    return false
+  }
+  
+  let totalMatches = 0
+  let totalChecks = 0
+  
+  for (const wine of wines) {
+    const wineText = `${wine.wine_name || ''} ${wine.producer || ''} ${wine.vintage || ''}`.toLowerCase()
+    
+    for (const keyTerm of keyTerms) {
+      totalChecks++
+      if (wineText.includes(keyTerm.toLowerCase())) {
+        totalMatches++
+      }
+    }
+  }
+  
+  const confidence = totalChecks > 0 ? totalMatches / totalChecks : 0
+  console.log(`Wine confidence level: ${(confidence * 100).toFixed(1)}% (${totalMatches}/${totalChecks} matches)`)
+  
+  return confidence >= CONFIDENCE_THRESHOLD
+}
+
 export async function synthesizeFromDB(
   question: string
 ): Promise<{ answer: string; canAnswer: boolean }> {
@@ -1777,6 +2098,9 @@ export async function synthesizeFromDB(
   // Route to appropriate search function
   let searchResult: { rows: Record<string, unknown>[]; canAnswer: boolean }
   switch (searchType) {
+    case 'wine':
+      searchResult = await searchWines(question)
+      break
     case 'grape':
       searchResult = await searchGrapes(question)
       break
