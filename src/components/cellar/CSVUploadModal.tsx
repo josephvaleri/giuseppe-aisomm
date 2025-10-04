@@ -112,7 +112,7 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
         where_stored: 'Wine cellar',
         value: 500.00,
         currency: 'USD',
-        my_notes: 'Excellent vintage, full-bodied with notes of blackcurrant',
+        my_notes: 'Excellent vintage with full-bodied notes',
         my_rating: 9,
         status: 'stored',
         bottle_size: '750ml',

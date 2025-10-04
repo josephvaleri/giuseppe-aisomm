@@ -13,6 +13,7 @@ import { AddWineModal } from '@/components/cellar/AddWineModal'
 import { EditWineModal } from '@/components/cellar/EditWineModal'
 import { CSVUploadModal } from '@/components/cellar/CSVUploadModal'
 import { WineMatchModal } from '@/components/cellar/WineMatchModal'
+import Papa from 'papaparse'
 
 export default function CellarPage() {
   const [cellarItems, setCellarItems] = useState<CellarItem[]>([])
@@ -116,7 +117,7 @@ export default function CellarPage() {
         where_stored: 'Wine cellar',
         value: 500.00,
         currency: 'USD',
-        my_notes: 'Excellent vintage, full-bodied with notes of blackcurrant',
+        my_notes: 'Excellent vintage with full-bodied notes',
         my_rating: 9,
         status: 'stored',
         bottle_size: '750ml',
@@ -143,10 +144,7 @@ export default function CellarPage() {
       }
     ]
 
-    const csvContent = [
-      Object.keys(sampleData[0]).join(','),
-      ...sampleData.map(row => Object.values(row).join(','))
-    ].join('\n')
+    const csvContent = Papa.unparse(sampleData)
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
