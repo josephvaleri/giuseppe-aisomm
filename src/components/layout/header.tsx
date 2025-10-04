@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { User, LogOut } from 'lucide-react'
+import { User, LogOut, Wine } from 'lucide-react'
 import Link from 'next/link'
 
 export function Header() {
@@ -60,6 +60,16 @@ export function Header() {
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
+                <Link href="/cellar">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                  >
+                    <Wine className="w-4 h-4 mr-2" />
+                    My Cellar
+                  </Button>
+                </Link>
                 <div className="flex items-center space-x-2 text-amber-700">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.email}</span>

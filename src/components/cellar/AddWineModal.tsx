@@ -1,0 +1,479 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { createClient } from '@/lib/supabase/client'
+import { WineMatch } from '@/types/cellar'
+import { Upload, Search } from 'lucide-react'
+
+interface AddWineModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onWineAdded: () => void
+  onWineMatched: (matches: WineMatch[], wineData: any) => void
+}
+
+export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: AddWineModalProps) {
+  const [wineData, setWineData] = useState({
+    wine_name: '',
+    producer: '',
+    vintage: '',
+    alcohol: '',
+    country_id: '',
+    region_id: '',
+    appellation_id: '',
+    bottle_size: '',
+    drink_starting: '',
+    drink_by: '',
+    barcode: '',
+    my_score: '',
+    color: ''
+  })
+
+  const [cellarData, setCellarData] = useState({
+    quantity: 1,
+    where_stored: '',
+    value: '',
+    currency: 'USD',
+    my_notes: '',
+    my_rating: '',
+    status: 'stored' as 'stored' | 'drank' | 'lost'
+  })
+
+  const [countries, setCountries] = useState<any[]>([])
+  const [regions, setRegions] = useState<any[]>([])
+  const [appellations, setAppellations] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    if (isOpen) {
+      loadReferenceData()
+    }
+  }, [isOpen])
+
+  const loadReferenceData = async () => {
+    try {
+      // Load countries
+      const { data: countriesData } = await supabase
+        .from('countries_regions')
+        .select('DISTINCT country_name, country_id')
+        .not('country_name', 'is', null)
+        .order('country_name')
+
+      // Load regions
+      const { data: regionsData } = await supabase
+        .from('countries_regions')
+        .select('region_id, wine_region, country_name')
+        .not('wine_region', 'is', null)
+        .order('wine_region')
+
+      // Load appellations
+      const { data: appellationsData } = await supabase
+        .from('appellation')
+        .select('appellation_id, appellation, classification')
+        .not('appellation', 'is', null)
+        .order('appellation')
+
+      setCountries(countriesData || [])
+      setRegions(regionsData || [])
+      setAppellations(appellationsData || [])
+    } catch (error) {
+      console.error('Error loading reference data:', error)
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!wineData.wine_name.trim()) {
+      newErrors.wine_name = 'Wine name is required'
+    }
+
+    if (wineData.vintage && (isNaN(Number(wineData.vintage)) || Number(wineData.vintage) < 1800 || Number(wineData.vintage) > new Date().getFullYear() + 5)) {
+      newErrors.vintage = 'Please enter a valid vintage year'
+    }
+
+    if (cellarData.quantity && (isNaN(Number(cellarData.quantity)) || Number(cellarData.quantity) < 0)) {
+      newErrors.quantity = 'Quantity must be a positive number'
+    }
+
+    if (cellarData.value && (isNaN(Number(cellarData.value)) || Number(cellarData.value) < 0)) {
+      newErrors.value = 'Value must be a positive number'
+    }
+
+    if (cellarData.my_rating && (isNaN(Number(cellarData.my_rating)) || Number(cellarData.my_rating) < 1 || Number(cellarData.my_rating) > 10)) {
+      newErrors.my_rating = 'Rating must be between 1 and 10'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+
+    setIsLoading(true)
+    try {
+      // First, try to find matching wines
+      const { data: matches, error } = await supabase.rpc('fuzzy_match_wines', {
+        input_wine_name: wineData.wine_name,
+        input_producer: wineData.producer || null,
+        input_vintage: wineData.vintage ? Number(wineData.vintage) : null,
+        match_threshold: 0.7
+      })
+
+      if (error) throw error
+
+      // If we found matches with high confidence, show match modal
+      if (matches && matches.length > 0 && matches[0].total_score >= 0.7) {
+        onWineMatched(matches, { ...wineData, ...cellarData })
+        return
+      }
+
+      // No good matches found, create new wine directly
+      await createNewWine()
+    } catch (error) {
+      console.error('Error checking for wine matches:', error)
+      alert('Error adding wine to cellar')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const createNewWine = async () => {
+    try {
+      // Create new wine
+      const { data: wine, error: wineError } = await supabase
+        .from('wines')
+        .insert({
+          wine_name: wineData.wine_name,
+          producer: wineData.producer || null,
+          vintage: wineData.vintage ? Number(wineData.vintage) : null,
+          alcohol: wineData.alcohol || null,
+          country_id: wineData.country_id || null,
+          region_id: wineData.region_id ? Number(wineData.region_id) : null,
+          appellation_id: wineData.appellation_id ? Number(wineData.appellation_id) : null,
+          bottle_size: wineData.bottle_size || null,
+          drink_starting: wineData.drink_starting || null,
+          drink_by: wineData.drink_by || null,
+          barcode: wineData.barcode || null,
+          my_score: wineData.my_score ? Number(wineData.my_score) : null,
+          color: wineData.color || null,
+          created_from_analysis: true,
+          analysis_confidence: 0.0
+        })
+        .select()
+        .single()
+
+      if (wineError) throw wineError
+
+      // Create cellar item
+      const { error: cellarError } = await supabase
+        .from('cellar_items')
+        .insert({
+          wine_id: wine.wine_id,
+          quantity: Number(cellarData.quantity),
+          where_stored: cellarData.where_stored || null,
+          value: cellarData.value ? Number(cellarData.value) : null,
+          currency: cellarData.currency,
+          my_notes: cellarData.my_notes || null,
+          my_rating: cellarData.my_rating ? Number(cellarData.my_rating) : null,
+          status: cellarData.status
+        })
+
+      if (cellarError) throw cellarError
+
+      onWineAdded()
+      onClose()
+      resetForm()
+    } catch (error) {
+      console.error('Error creating wine:', error)
+      alert('Error adding wine to cellar')
+    }
+  }
+
+  const resetForm = () => {
+    setWineData({
+      wine_name: '',
+      producer: '',
+      vintage: '',
+      alcohol: '',
+      country_id: '',
+      region_id: '',
+      appellation_id: '',
+      bottle_size: '',
+      drink_starting: '',
+      drink_by: '',
+      barcode: '',
+      my_score: '',
+      color: ''
+    })
+    setCellarData({
+      quantity: 1,
+      where_stored: '',
+      value: '',
+      currency: 'USD',
+      my_notes: '',
+      my_rating: '',
+      status: 'stored'
+    })
+    setErrors({})
+  }
+
+  const handleClose = () => {
+    onClose()
+    resetForm()
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-amber-900">
+            Add New Bottle to Cellar
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Wine Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+              🍷 Wine Information
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="wine_name">Wine Name *</Label>
+                <Input
+                  id="wine_name"
+                  placeholder="e.g., Château Margaux"
+                  value={wineData.wine_name}
+                  onChange={(e) => setWineData(prev => ({ ...prev, wine_name: e.target.value }))}
+                  className={errors.wine_name ? 'border-red-500' : ''}
+                />
+                {errors.wine_name && <p className="text-sm text-red-500">{errors.wine_name}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="producer">Producer</Label>
+                <Input
+                  id="producer"
+                  placeholder="e.g., Château Margaux"
+                  value={wineData.producer}
+                  onChange={(e) => setWineData(prev => ({ ...prev, producer: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="vintage">Vintage</Label>
+                <Input
+                  id="vintage"
+                  placeholder="e.g., 2015"
+                  value={wineData.vintage}
+                  onChange={(e) => setWineData(prev => ({ ...prev, vintage: e.target.value }))}
+                  className={errors.vintage ? 'border-red-500' : ''}
+                />
+                {errors.vintage && <p className="text-sm text-red-500">{errors.vintage}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="alcohol">Alcohol %</Label>
+                <Input
+                  id="alcohol"
+                  placeholder="e.g., 13.5"
+                  value={wineData.alcohol}
+                  onChange={(e) => setWineData(prev => ({ ...prev, alcohol: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="country_id">Country</Label>
+                <Select value={wineData.country_id} onValueChange={(value) => setWineData(prev => ({ ...prev, country_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.country_id} value={country.country_id}>
+                        {country.country_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="region_id">Region</Label>
+                <Select value={wineData.region_id} onValueChange={(value) => setWineData(prev => ({ ...prev, region_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regions.map((region) => (
+                      <SelectItem key={region.region_id} value={region.region_id.toString()}>
+                        {region.wine_region} ({region.country_name})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="appellation_id">Appellation</Label>
+                <Select value={wineData.appellation_id} onValueChange={(value) => setWineData(prev => ({ ...prev, appellation_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select appellation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appellations.map((appellation) => (
+                      <SelectItem key={appellation.appellation_id} value={appellation.appellation_id.toString()}>
+                        {appellation.appellation} {appellation.classification && `(${appellation.classification})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bottle_size">Bottle Size</Label>
+                <Select value={wineData.bottle_size} onValueChange={(value) => setWineData(prev => ({ ...prev, bottle_size: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bottle size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="750ml">750ml (Standard)</SelectItem>
+                    <SelectItem value="375ml">375ml (Half bottle)</SelectItem>
+                    <SelectItem value="187ml">187ml (Quarter bottle)</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Cellar Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-amber-800">Cellar Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={cellarData.quantity}
+                  onChange={(e) => setCellarData(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                  className={errors.quantity ? 'border-red-500' : ''}
+                />
+                {errors.quantity && <p className="text-sm text-red-500">{errors.quantity}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={cellarData.status} onValueChange={(value: any) => setCellarData(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stored">Stored</SelectItem>
+                    <SelectItem value="drank">Drank</SelectItem>
+                    <SelectItem value="lost">Lost</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="where_stored">Where Stored</Label>
+                <Input
+                  id="where_stored"
+                  placeholder="e.g., Wine cellar, Kitchen"
+                  value={cellarData.where_stored}
+                  onChange={(e) => setCellarData(prev => ({ ...prev, where_stored: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="value">Value</Label>
+                <Input
+                  id="value"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={cellarData.value}
+                  onChange={(e) => setCellarData(prev => ({ ...prev, value: e.target.value }))}
+                  className={errors.value ? 'border-red-500' : ''}
+                />
+                {errors.value && <p className="text-sm text-red-500">{errors.value}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currency">Currency</Label>
+                <Select value={cellarData.currency} onValueChange={(value) => setCellarData(prev => ({ ...prev, currency: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CAD">CAD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="my_rating">My Rating</Label>
+                <Select value={cellarData.my_rating} onValueChange={(value) => setCellarData(prev => ({ ...prev, my_rating: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your rating (1-10)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((rating) => (
+                      <SelectItem key={rating} value={rating.toString()}>
+                        {rating}/10
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="my_notes">Flavor Profile</Label>
+              <Textarea
+                id="my_notes"
+                placeholder="Describe the wine's flavor profile, tasting notes, etc."
+                value={cellarData.my_notes}
+                onChange={(e) => setCellarData(prev => ({ ...prev, my_notes: e.target.value }))}
+                className="min-h-[100px] resize-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isLoading}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
+            {isLoading ? 'Adding...' : 'Add to Cellar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
