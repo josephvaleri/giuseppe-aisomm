@@ -313,8 +313,7 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
             drink_by,
             barcode,
             my_score,
-            color,
-            countries_regions!fk_wines_country(country_name, wine_region)
+            color
           `)
           .ilike('wine_name', `%${searchQuery.trim()}%`)
           .limit(10)
@@ -329,8 +328,8 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         const formattedResults = (fallbackResults || []).map((wine: any) => ({
           ...wine,
           total_score: 0.6, // Give fallback results a decent score
-          country_name: wine.countries_regions?.country_name,
-          wine_region: wine.countries_regions?.wine_region
+          country_name: null, // Will be populated from countries data if needed
+          wine_region: null   // Will be populated from regions data if needed
         }))
         
         setSearchResults(formattedResults)

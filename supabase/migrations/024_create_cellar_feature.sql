@@ -90,7 +90,7 @@ BEGIN
       CASE WHEN input_producer IS NOT NULL AND w.producer IS NOT NULL 
            THEN similarity(w.producer, input_producer) 
            ELSE 0 END
-    ) as match_score,
+    )::numeric as match_score,
     (
       similarity(w.wine_name, input_wine_name) * 0.5 +
       CASE WHEN input_producer IS NOT NULL AND w.producer IS NOT NULL 
@@ -99,7 +99,7 @@ BEGIN
       CASE WHEN input_vintage IS NOT NULL AND w.vintage IS NOT NULL 
            THEN CASE WHEN w.vintage = input_vintage THEN 0.2 ELSE 0 END 
            ELSE 0.2 END
-    ) as total_score
+    )::numeric as total_score
   FROM wines w
   WHERE (
     similarity(w.wine_name, input_wine_name) >= match_threshold OR
