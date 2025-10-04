@@ -52,6 +52,12 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
   const [filteredAppellations, setFilteredAppellations] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  
+  // Wine search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   const supabase = createClient()
 
@@ -257,6 +263,73 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
     }))
   }
 
+  const searchWines = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setShowSearchResults(false)
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      // Use the fuzzy_match_wines RPC function with 50% threshold
+      const { data: matches, error } = await supabase.rpc('fuzzy_match_wines', {
+        input_wine_name: searchQuery.trim(),
+        input_producer: null,
+        input_vintage: null,
+        match_threshold: 0.5 // 50% confidence threshold
+      })
+
+      if (error) throw error
+
+      // Filter results to only show wines with 50% or better confidence
+      const filteredMatches = (matches || []).filter((match: any) => match.total_score >= 0.5)
+      setSearchResults(filteredMatches)
+      setShowSearchResults(true)
+    } catch (error) {
+      console.error('Error searching wines:', error)
+      setSearchResults([])
+      setShowSearchResults(false)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const selectWineFromSearch = (wine: any) => {
+    // Populate the form with the selected wine's data
+    setWineData({
+      wine_name: wine.wine_name || '',
+      producer: wine.producer || '',
+      vintage: wine.vintage ? wine.vintage.toString() : '',
+      alcohol: wine.alcohol || '',
+      country_id: wine.country_id || '',
+      region_id: wine.region_id ? wine.region_id.toString() : '',
+      appellation_id: wine.appellation_id ? wine.appellation_id.toString() : '',
+      bottle_size: wine.bottle_size || '',
+      drink_starting: wine.drink_starting || '',
+      drink_by: wine.drink_by || '',
+      barcode: wine.barcode || '',
+      my_score: wine.my_score ? wine.my_score.toString() : '',
+      color: wine.color || ''
+    })
+
+    // Update cascading dropdowns based on the selected wine
+    if (wine.country_id) {
+      handleCountryChange(wine.country_id)
+    }
+    if (wine.region_id) {
+      handleRegionChange(wine.region_id.toString())
+    }
+    if (wine.appellation_id) {
+      handleAppellationChange(wine.appellation_id.toString())
+    }
+
+    // Clear search
+    setSearchQuery('')
+    setSearchResults([])
+    setShowSearchResults(false)
+  }
+
   const resetForm = () => {
     setWineData({
       wine_name: '',
@@ -285,6 +358,9 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
     setErrors({})
     setFilteredRegions([])
     setFilteredAppellations([])
+    setSearchQuery('')
+    setSearchResults([])
+    setShowSearchResults(false)
   }
 
   const handleClose = () => {
@@ -300,6 +376,72 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
             Add New Bottle to Cellar
           </DialogTitle>
         </DialogHeader>
+
+        {/* Wine Search Section */}
+        <div className="space-y-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <h3 className="text-lg font-semibold text-amber-800 flex items-center">
+            <Search className="w-5 h-5 mr-2" />
+            Search Existing Wines
+          </h3>
+          <p className="text-sm text-amber-700">
+            Search our database of wines and select one to auto-populate the form below.
+          </p>
+          
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search by wine name (e.g., Château Margaux, Opus One)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && searchWines()}
+              className="flex-1"
+            />
+            <Button 
+              onClick={searchWines} 
+              disabled={isSearching || !searchQuery.trim()}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isSearching ? 'Searching...' : 'Search'}
+            </Button>
+          </div>
+
+          {/* Search Results */}
+          {showSearchResults && (
+            <div className="border border-amber-300 rounded-lg bg-white max-h-60 overflow-y-auto">
+              {searchResults.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No wines found with 50% or better confidence match.
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {searchResults.map((wine, index) => (
+                    <div
+                      key={wine.wine_id || index}
+                      onClick={() => selectWineFromSearch(wine)}
+                      className="p-3 hover:bg-amber-50 cursor-pointer border-b border-amber-100 last:border-b-0"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-amber-900">
+                            {wine.wine_name}
+                          </div>
+                          <div className="text-sm text-amber-700">
+                            {wine.producer && `${wine.producer} • `}
+                            {wine.vintage && `Vintage ${wine.vintage} • `}
+                            {wine.country_name && `${wine.country_name}`}
+                            {wine.wine_region && ` • ${wine.wine_region}`}
+                          </div>
+                        </div>
+                        <div className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded">
+                          {Math.round(wine.total_score * 100)}% match
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="space-y-6">
           {/* Wine Information */}
