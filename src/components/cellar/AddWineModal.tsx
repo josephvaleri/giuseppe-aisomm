@@ -191,6 +191,12 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
   const createNewWine = async () => {
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
       // Create new wine
       const { data: wine, error: wineError } = await supabase
         .from('wines')
@@ -221,6 +227,7 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         .from('cellar_items')
         .insert({
           wine_id: wine.wine_id,
+          user_id: user.id,
           quantity: Number(cellarData.quantity),
           where_stored: cellarData.where_stored || null,
           value: cellarData.value ? Number(cellarData.value) : null,
