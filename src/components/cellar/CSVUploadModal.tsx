@@ -31,6 +31,74 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
 
   const supabase = createClient()
 
+  // Function to match text fields to IDs
+  const matchTextToIds = async (csvData: CSVWineData[]): Promise<{ matched: any[], errors: string[] }> => {
+    const errors: string[] = []
+    const matched: any[] = []
+
+    try {
+      // Load reference data
+      const [countriesResult, regionsResult, appellationsResult] = await Promise.all([
+        supabase.from('countries_regions').select('country_id, country_name').not('country_name', 'is', null),
+        supabase.from('countries_regions').select('region_id, wine_region, country_id').not('wine_region', 'is', null),
+        supabase.from('appellation').select('appellation_id, appellation, region_id').not('appellation', 'is', null)
+      ])
+
+      const countries = countriesResult.data || []
+      const regions = regionsResult.data || []
+      const appellations = appellationsResult.data || []
+
+      for (let i = 0; i < csvData.length; i++) {
+        const row = csvData[i]
+        const rowNum = i + 2 // +2 because CSV starts at row 1 and we skip header
+        let matchedRow = { ...row }
+
+        // Match country
+        if (row.country) {
+          const matchedCountry = countries.find(c => 
+            c.country_name.toLowerCase() === row.country!.toLowerCase()
+          )
+          if (matchedCountry) {
+            matchedRow.country_id = matchedCountry.country_id
+          } else {
+            errors.push(`Row ${rowNum}: Country "${row.country}" not found`)
+          }
+        }
+
+        // Match region
+        if (row.region) {
+          const matchedRegion = regions.find(r => 
+            r.wine_region.toLowerCase() === row.region!.toLowerCase()
+          )
+          if (matchedRegion) {
+            matchedRow.region_id = matchedRegion.region_id
+          } else {
+            errors.push(`Row ${rowNum}: Region "${row.region}" not found`)
+          }
+        }
+
+        // Match appellation
+        if (row.appellation) {
+          const matchedAppellation = appellations.find(a => 
+            a.appellation.toLowerCase() === row.appellation!.toLowerCase()
+          )
+          if (matchedAppellation) {
+            matchedRow.appellation_id = matchedAppellation.appellation_id
+          } else {
+            errors.push(`Row ${rowNum}: Appellation "${row.appellation}" not found`)
+          }
+        }
+
+        matched.push(matchedRow)
+      }
+
+      return { matched, errors }
+    } catch (error) {
+      console.error('Error matching text to IDs:', error)
+      return { matched: [], errors: ['Error loading reference data for matching'] }
+    }
+  }
+
   const downloadSampleCSV = () => {
     const sampleData = [
       {
@@ -38,8 +106,8 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
         producer: 'Château Margaux',
         vintage: 2015,
         appellation: 'Margaux',
-        country_id: 'FR',
-        region_id: 1,
+        country: 'France',
+        region: 'Bordeaux',
         quantity: 1,
         where_stored: 'Wine cellar',
         value: 500.00,
@@ -56,8 +124,8 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
         producer: 'Vietti',
         vintage: 2018,
         appellation: 'Barolo',
-        country_id: 'IT',
-        region_id: 2,
+        country: 'Italy',
+        region: 'Piedmont',
         quantity: 2,
         where_stored: 'Wine cellar',
         value: 120.00,
@@ -127,8 +195,8 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
           producer: row.producer?.trim(),
           vintage: row.vintage ? Number(row.vintage) : undefined,
           appellation: row.appellation?.trim(),
-          country_id: row.country_id?.trim(),
-          region_id: row.region_id ? Number(row.region_id) : undefined,
+          country: row.country?.trim(),
+          region: row.region?.trim(),
           quantity: row.quantity ? Number(row.quantity) : 1,
           where_stored: row.where_stored?.trim(),
           value: row.value ? Number(row.value) : undefined,
@@ -161,7 +229,7 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
 
           // Validate data
           const { valid, errors } = validateCSVData(results.data)
-          setUploadProgress(50)
+          setUploadProgress(25)
 
           if (errors.length > 0) {
             setUploadResult({
@@ -185,28 +253,119 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
             return
           }
 
-          // Batch insert with fuzzy matching
-          const { data: batchResults, error } = await supabase.rpc('batch_insert_cellar_items', {
-            items: valid,
-            match_threshold: 0.95 // High confidence for CSV imports
-          })
+          // Match text fields to IDs
+          const { matched: matchedData, errors: matchingErrors } = await matchTextToIds(valid)
+          setUploadProgress(50)
+
+          if (matchingErrors.length > 0) {
+            setUploadResult({
+              total: results.data.length,
+              matched: 0,
+              created: 0,
+              errors: matchingErrors
+            })
+            setIsUploading(false)
+            return
+          }
+
+          // Get current user
+          const { data: { user } } = await supabase.auth.getUser()
+          if (!user) {
+            setUploadResult({
+              total: results.data.length,
+              matched: 0,
+              created: 0,
+              errors: ['User not authenticated']
+            })
+            setIsUploading(false)
+            return
+          }
+
+          // Process each wine individually
+          let matched = 0
+          let created = 0
+          const processingErrors: string[] = []
+
+          for (let i = 0; i < matchedData.length; i++) {
+            const wineData = matchedData[i]
+            const rowNum = i + 2
+
+            try {
+              // First, try to find existing wine
+              const { data: existingWines } = await supabase
+                .from('wines')
+                .select('wine_id')
+                .ilike('wine_name', `%${wineData.wine_name}%`)
+                .limit(1)
+
+              let wineId: number
+
+              if (existingWines && existingWines.length > 0) {
+                // Use existing wine
+                wineId = existingWines[0].wine_id
+                matched++
+              } else {
+                // Create new wine
+                const { data: newWine, error: wineError } = await supabase
+                  .from('wines')
+                  .insert({
+                    wine_name: wineData.wine_name,
+                    producer: wineData.producer || null,
+                    vintage: wineData.vintage || null,
+                    alcohol: wineData.alcohol || null,
+                    country_id: wineData.country_id || null,
+                    region_id: wineData.region_id || null,
+                    appellation_id: wineData.appellation_id || null,
+                    bottle_size: wineData.bottle_size || null,
+                    barcode: wineData.barcode || null,
+                    created_from_analysis: false,
+                    analysis_confidence: 1.0
+                  })
+                  .select()
+                  .single()
+
+                if (wineError) throw wineError
+                wineId = newWine.wine_id
+                created++
+              }
+
+              // Create cellar item
+              const { error: cellarError } = await supabase
+                .from('cellar_items')
+                .insert({
+                  wine_id: wineId,
+                  user_id: user.id,
+                  quantity: wineData.quantity || 1,
+                  where_stored: wineData.where_stored || null,
+                  value: wineData.value || null,
+                  currency: wineData.currency || 'USD',
+                  my_notes: wineData.my_notes || null,
+                  my_rating: wineData.my_rating || null,
+                  status: wineData.status || 'stored'
+                })
+
+              if (cellarError) throw cellarError
+
+            } catch (error) {
+              console.error(`Error processing row ${rowNum}:`, error)
+              processingErrors.push(`Row ${rowNum}: Failed to process wine - ${error}`)
+            }
+
+            setUploadProgress(50 + (i / matchedData.length) * 40)
+          }
 
           setUploadProgress(100)
 
-          if (error) throw error
-
-          // Process results
-          const matched = batchResults.filter((r: BatchInsertResult) => r.match_type === 'existing_wine').length
-          const created = batchResults.filter((r: BatchInsertResult) => r.match_type === 'new_wine').length
-
           setUploadResult({
-            total: valid.length,
+            total: matchedData.length,
             matched,
             created,
-            errors: []
+            errors: processingErrors
           })
 
-          onWinesImported()
+          if (processingErrors.length === 0) {
+            onWinesImported()
+          }
         },
         error: (error) => {
           setUploadResult({
@@ -355,7 +514,7 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
               <Progress value={uploadProgress} className="w-full" />
               <p className="text-center text-sm text-amber-600">
                 {uploadProgress < 25 && 'Parsing CSV file...'}
-                {uploadProgress >= 25 && uploadProgress < 50 && 'Validating data...'}
+                {uploadProgress >= 25 && uploadProgress < 50 && 'Validating and matching data...'}
                 {uploadProgress >= 50 && uploadProgress < 100 && 'Adding wines to cellar...'}
                 {uploadProgress >= 100 && 'Complete!'}
               </p>

@@ -52,8 +52,8 @@ export interface CSVWineData {
   producer?: string
   vintage?: number
   appellation?: string
-  country_id?: string
-  region_id?: number
+  country?: string
+  region?: string
   quantity?: number
   where_stored?: string
   value?: number
