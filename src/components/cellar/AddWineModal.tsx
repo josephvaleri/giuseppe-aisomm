@@ -48,6 +48,8 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
   const [countries, setCountries] = useState<any[]>([])
   const [regions, setRegions] = useState<any[]>([])
   const [appellations, setAppellations] = useState<any[]>([])
+  const [filteredRegions, setFilteredRegions] = useState<any[]>([])
+  const [filteredAppellations, setFilteredAppellations] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -71,20 +73,28 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
       // Load regions
       const { data: regionsData } = await supabase
         .from('countries_regions')
-        .select('region_id, wine_region, country_name')
+        .select('region_id, wine_region, country_name, country_id')
         .not('wine_region', 'is', null)
         .order('wine_region')
 
-      // Load appellations
+      // Load appellations with region relationships
       const { data: appellationsData } = await supabase
         .from('appellation')
-        .select('appellation_id, appellation, classification')
+        .select(`
+          appellation_id, 
+          appellation, 
+          classification,
+          region_id,
+          countries_regions!fk_appellation_region(country_name, country_id)
+        `)
         .not('appellation', 'is', null)
         .order('appellation')
 
       setCountries(countriesData || [])
       setRegions(regionsData || [])
       setAppellations(appellationsData || [])
+      setFilteredRegions([])
+      setFilteredAppellations([])
     } catch (error) {
       console.error('Error loading reference data:', error)
     }
@@ -200,6 +210,43 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
     }
   }
 
+  const handleCountryChange = (countryId: string) => {
+    // Filter regions by selected country
+    const countryRegions = regions.filter(region => region.country_id === countryId)
+    setFilteredRegions(countryRegions)
+    setFilteredAppellations([]) // Reset appellations
+    
+    // Update wine data and reset dependent fields
+    setWineData(prev => ({
+      ...prev,
+      country_id: countryId,
+      region_id: '', // Reset region
+      appellation_id: '' // Reset appellation
+    }))
+  }
+
+  const handleRegionChange = (regionId: string) => {
+    // Filter appellations by selected region
+    const regionAppellations = appellations.filter(appellation => 
+      appellation.region_id === Number(regionId)
+    )
+    setFilteredAppellations(regionAppellations)
+    
+    // Update wine data and reset appellation
+    setWineData(prev => ({
+      ...prev,
+      region_id: regionId,
+      appellation_id: '' // Reset appellation
+    }))
+  }
+
+  const handleAppellationChange = (appellationId: string) => {
+    setWineData(prev => ({
+      ...prev,
+      appellation_id: appellationId
+    }))
+  }
+
   const resetForm = () => {
     setWineData({
       wine_name: '',
@@ -226,6 +273,8 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
       status: 'stored'
     })
     setErrors({})
+    setFilteredRegions([])
+    setFilteredAppellations([])
   }
 
   const handleClose = () => {
@@ -296,7 +345,7 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
               <div className="space-y-2">
                 <Label htmlFor="country_id">Country</Label>
-                <Select value={wineData.country_id} onValueChange={(value) => setWineData(prev => ({ ...prev, country_id: value }))}>
+                <Select value={wineData.country_id} onValueChange={handleCountryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
@@ -312,14 +361,18 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
               <div className="space-y-2">
                 <Label htmlFor="region_id">Region</Label>
-                <Select value={wineData.region_id} onValueChange={(value) => setWineData(prev => ({ ...prev, region_id: value }))}>
+                <Select 
+                  value={wineData.region_id} 
+                  onValueChange={handleRegionChange}
+                  disabled={!wineData.country_id}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
+                    <SelectValue placeholder={wineData.country_id ? "Select region" : "Select country first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {regions.map((region) => (
+                    {filteredRegions.map((region) => (
                       <SelectItem key={region.region_id} value={region.region_id.toString()}>
-                        {region.wine_region} ({region.country_name})
+                        {region.wine_region}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -328,12 +381,16 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
               <div className="space-y-2">
                 <Label htmlFor="appellation_id">Appellation</Label>
-                <Select value={wineData.appellation_id} onValueChange={(value) => setWineData(prev => ({ ...prev, appellation_id: value }))}>
+                <Select 
+                  value={wineData.appellation_id} 
+                  onValueChange={handleAppellationChange}
+                  disabled={!wineData.region_id}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select appellation" />
+                    <SelectValue placeholder={wineData.region_id ? "Select appellation" : "Select region first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {appellations.map((appellation) => (
+                    {filteredAppellations.map((appellation) => (
                       <SelectItem key={appellation.appellation_id} value={appellation.appellation_id.toString()}>
                         {appellation.appellation} {appellation.classification && `(${appellation.classification})`}
                       </SelectItem>
