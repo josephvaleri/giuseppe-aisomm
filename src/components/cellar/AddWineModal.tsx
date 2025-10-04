@@ -76,6 +76,28 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         .limit(5)
       
       console.log('Sample wines in database:', { winesData, winesError })
+      
+      // Let's also test a simple search to see if it works
+      const { data: testSearch, error: testError } = await supabase
+        .from('wines')
+        .select('wine_id, wine_name, producer, vintage')
+        .ilike('wine_name', '%Casanova%')
+        .limit(3)
+      
+      console.log('Test search for Casanova:', { testSearch, testError })
+      
+      // Let's test the RPC function directly
+      try {
+        const { data: rpcTest, error: rpcError } = await supabase.rpc('fuzzy_match_wines', {
+          input_wine_name: 'Casanova',
+          input_producer: null,
+          input_vintage: null,
+          match_threshold: 0.3
+        })
+        console.log('RPC function test:', { rpcTest, rpcError })
+      } catch (rpcErr) {
+        console.log('RPC function test failed:', rpcErr)
+      }
 
       // Load all countries_regions data first
       const { data: countriesRegionsData } = await supabase
@@ -297,6 +319,9 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         
         // Fallback to simple text search if RPC function fails
         console.log('Falling back to simple text search...')
+        
+        // Try multiple search strategies
+        const searchTerm = searchQuery.trim()
         const { data: fallbackResults, error: fallbackError } = await supabase
           .from('wines')
           .select(`
@@ -315,7 +340,7 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
             my_score,
             color
           `)
-          .ilike('wine_name', `%${searchQuery.trim()}%`)
+          .or(`wine_name.ilike.%${searchTerm}%,producer.ilike.%${searchTerm}%`)
           .limit(10)
         
         console.log('Fallback search results:', { fallbackResults, fallbackError })
