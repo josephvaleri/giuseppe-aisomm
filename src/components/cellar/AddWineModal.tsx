@@ -69,6 +69,14 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
   const loadReferenceData = async () => {
     try {
+      // First, let's check if there are any wines in the database
+      const { data: winesData, error: winesError } = await supabase
+        .from('wines')
+        .select('wine_id, wine_name, producer, vintage')
+        .limit(5)
+      
+      console.log('Sample wines in database:', { winesData, winesError })
+
       // Load all countries_regions data first
       const { data: countriesRegionsData } = await supabase
         .from('countries_regions')
@@ -272,6 +280,8 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
     setIsSearching(true)
     try {
+      console.log('Searching for:', searchQuery.trim())
+      
       // Use the fuzzy_match_wines RPC function with 50% threshold
       const { data: matches, error } = await supabase.rpc('fuzzy_match_wines', {
         input_wine_name: searchQuery.trim(),
@@ -280,10 +290,58 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         match_threshold: 0.5 // 50% confidence threshold
       })
 
-      if (error) throw error
+      console.log('Search results:', { matches, error })
+
+      if (error) {
+        console.error('RPC function error:', error)
+        
+        // Fallback to simple text search if RPC function fails
+        console.log('Falling back to simple text search...')
+        const { data: fallbackResults, error: fallbackError } = await supabase
+          .from('wines')
+          .select(`
+            wine_id,
+            wine_name,
+            producer,
+            vintage,
+            alcohol,
+            country_id,
+            region_id,
+            appellation_id,
+            bottle_size,
+            drink_starting,
+            drink_by,
+            barcode,
+            my_score,
+            color,
+            countries_regions!fk_wines_country(country_name, wine_region)
+          `)
+          .ilike('wine_name', `%${searchQuery.trim()}%`)
+          .limit(10)
+        
+        console.log('Fallback search results:', { fallbackResults, fallbackError })
+        
+        if (fallbackError) {
+          throw fallbackError
+        }
+        
+        // Format fallback results to match expected structure
+        const formattedResults = (fallbackResults || []).map((wine: any) => ({
+          ...wine,
+          total_score: 0.6, // Give fallback results a decent score
+          country_name: wine.countries_regions?.country_name,
+          wine_region: wine.countries_regions?.wine_region
+        }))
+        
+        setSearchResults(formattedResults)
+        setShowSearchResults(true)
+        return
+      }
 
       // Filter results to only show wines with 50% or better confidence
       const filteredMatches = (matches || []).filter((match: any) => match.total_score >= 0.5)
+      console.log('Filtered matches:', filteredMatches)
+      
       setSearchResults(filteredMatches)
       setShowSearchResults(true)
     } catch (error) {
