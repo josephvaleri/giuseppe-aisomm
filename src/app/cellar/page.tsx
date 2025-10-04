@@ -110,8 +110,8 @@ export default function CellarPage() {
         producer: 'Château Margaux',
         vintage: 2015,
         appellation: 'Margaux',
-        country_id: 'FR',
-        region_id: 1,
+        country: 'France',
+        region: 'Bordeaux',
         quantity: 1,
         where_stored: 'Wine cellar',
         value: 500.00,
@@ -122,6 +122,24 @@ export default function CellarPage() {
         bottle_size: '750ml',
         alcohol: '13.5%',
         barcode: '123456789012'
+      },
+      {
+        wine_name: 'Barolo Brunate',
+        producer: 'Vietti',
+        vintage: 2018,
+        appellation: 'Barolo',
+        country: 'Italy',
+        region: 'Piedmont',
+        quantity: 2,
+        where_stored: 'Wine cellar',
+        value: 120.00,
+        currency: 'USD',
+        my_notes: 'Classic Barolo with great aging potential',
+        my_rating: 8,
+        status: 'stored',
+        bottle_size: '750ml',
+        alcohol: '14.0%',
+        barcode: '123456789013'
       }
     ]
 
@@ -134,7 +152,7 @@ export default function CellarPage() {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'sample_cellar_import.csv'
+    a.download = `sample_cellar_import_v${Date.now()}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
   }

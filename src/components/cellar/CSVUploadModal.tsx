@@ -147,7 +147,7 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'sample_cellar_import_v2.csv'
+    a.download = `sample_cellar_import_v${Date.now()}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
   }
