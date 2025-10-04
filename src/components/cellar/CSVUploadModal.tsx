@@ -139,12 +139,15 @@ export function CSVUploadModal({ isOpen, onClose, onWinesImported }: CSVUploadMo
       }
     ]
 
+    console.log('Downloading sample CSV with data:', sampleData)
     const csvContent = Papa.unparse(sampleData)
+    console.log('Generated CSV content:', csvContent)
+    
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'sample_cellar_import.csv'
+    a.download = 'sample_cellar_import_v2.csv'
     a.click()
     window.URL.revokeObjectURL(url)
   }
