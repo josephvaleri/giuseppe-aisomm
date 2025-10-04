@@ -178,26 +178,11 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
     setIsLoading(true)
     try {
-      // First, try to find matching wines
-      const { data: matches, error } = await supabase.rpc('fuzzy_match_wines', {
-        input_wine_name: wineData.wine_name,
-        input_producer: wineData.producer || null,
-        input_vintage: wineData.vintage ? Number(wineData.vintage) : null,
-        match_threshold: 0.7
-      })
-
-      if (error) throw error
-
-      // If we found matches with high confidence, show match modal
-      if (matches && matches.length > 0 && matches[0].total_score >= 0.7) {
-        onWineMatched(matches, { ...wineData, ...cellarData })
-        return
-      }
-
-      // No good matches found, create new wine directly
+      // Skip fuzzy matching for now since RPC function has issues
+      // Create new wine directly
       await createNewWine()
     } catch (error) {
-      console.error('Error checking for wine matches:', error)
+      console.error('Error adding wine to cellar:', error)
       alert('Error adding wine to cellar')
     } finally {
       setIsLoading(false)
@@ -304,69 +289,44 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
     try {
       console.log('Searching for:', searchQuery.trim())
       
-      // Use the fuzzy_match_wines RPC function with 50% threshold
-      const { data: matches, error } = await supabase.rpc('fuzzy_match_wines', {
-        input_wine_name: searchQuery.trim(),
-        input_producer: null,
-        input_vintage: null,
-        match_threshold: 0.5 // 50% confidence threshold
-      })
-
-      console.log('Search results:', { matches, error })
-
-      if (error) {
-        console.error('RPC function error:', error)
-        
-        // Fallback to simple text search if RPC function fails
-        console.log('Falling back to simple text search...')
-        
-        // Try multiple search strategies
-        const searchTerm = searchQuery.trim()
-        const { data: fallbackResults, error: fallbackError } = await supabase
-          .from('wines')
-          .select(`
-            wine_id,
-            wine_name,
-            producer,
-            vintage,
-            alcohol,
-            country_id,
-            region_id,
-            appellation_id,
-            bottle_size,
-            drink_starting,
-            drink_by,
-            barcode,
-            my_score,
-            color
-          `)
-          .or(`wine_name.ilike.%${searchTerm}%,producer.ilike.%${searchTerm}%`)
-          .limit(10)
-        
-        console.log('Fallback search results:', { fallbackResults, fallbackError })
-        
-        if (fallbackError) {
-          throw fallbackError
-        }
-        
-        // Format fallback results to match expected structure
-        const formattedResults = (fallbackResults || []).map((wine: any) => ({
-          ...wine,
-          total_score: 0.6, // Give fallback results a decent score
-          country_name: null, // Will be populated from countries data if needed
-          wine_region: null   // Will be populated from regions data if needed
-        }))
-        
-        setSearchResults(formattedResults)
-        setShowSearchResults(true)
-        return
-      }
-
-      // Filter results to only show wines with 50% or better confidence
-      const filteredMatches = (matches || []).filter((match: any) => match.total_score >= 0.5)
-      console.log('Filtered matches:', filteredMatches)
+      // Use simple text search as primary method since RPC function has issues
+      const searchTerm = searchQuery.trim()
+      const { data: searchResults, error: searchError } = await supabase
+        .from('wines')
+        .select(`
+          wine_id,
+          wine_name,
+          producer,
+          vintage,
+          alcohol,
+          country_id,
+          region_id,
+          appellation_id,
+          bottle_size,
+          drink_starting,
+          drink_by,
+          barcode,
+          my_score,
+          color
+        `)
+        .or(`wine_name.ilike.%${searchTerm}%,producer.ilike.%${searchTerm}%`)
+        .limit(10)
       
-      setSearchResults(filteredMatches)
+      console.log('Search results:', { searchResults, searchError })
+      
+      if (searchError) {
+        throw searchError
+      }
+      
+      // Format results to match expected structure
+      const formattedResults = (searchResults || []).map((wine: any) => ({
+        ...wine,
+        total_score: 0.6, // Give results a decent score
+        country_name: null, // Will be populated from countries data if needed
+        wine_region: null   // Will be populated from regions data if needed
+      }))
+      
+      setSearchResults(formattedResults)
       setShowSearchResults(true)
     } catch (error) {
       console.error('Error searching wines:', error)
