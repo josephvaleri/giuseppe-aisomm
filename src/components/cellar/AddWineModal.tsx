@@ -63,19 +63,23 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
 
   const loadReferenceData = async () => {
     try {
-      // Load countries
-      const { data: countriesData } = await supabase
+      // Load all countries_regions data first
+      const { data: countriesRegionsData } = await supabase
         .from('countries_regions')
-        .select('DISTINCT country_name, country_id')
+        .select('country_name, country_id, region_id, wine_region')
         .not('country_name', 'is', null)
+        .not('country_id', 'is', null)
         .order('country_name')
 
-      // Load regions
-      const { data: regionsData } = await supabase
-        .from('countries_regions')
-        .select('region_id, wine_region, country_name, country_id')
-        .not('wine_region', 'is', null)
-        .order('wine_region')
+      // Extract unique countries from the data
+      const uniqueCountries = Array.from(
+        new Map(
+          (countriesRegionsData || []).map(item => [item.country_id, item])
+        ).values()
+      ).sort((a, b) => a.country_name.localeCompare(b.country_name))
+
+      // Load regions (same data, but we'll use it for regions)
+      const regionsData = (countriesRegionsData || []).filter(item => item.wine_region)
 
       // Load appellations with region relationships
       const { data: appellationsData } = await supabase
@@ -90,11 +94,17 @@ export function AddWineModal({ isOpen, onClose, onWineAdded, onWineMatched }: Ad
         .not('appellation', 'is', null)
         .order('appellation')
 
-      setCountries(countriesData || [])
-      setRegions(regionsData || [])
+      setCountries(uniqueCountries)
+      setRegions(regionsData)
       setAppellations(appellationsData || [])
       setFilteredRegions([])
       setFilteredAppellations([])
+      
+      console.log('Loaded reference data:', {
+        countries: uniqueCountries.length,
+        regions: regionsData.length,
+        appellations: (appellationsData || []).length
+      })
     } catch (error) {
       console.error('Error loading reference data:', error)
     }
