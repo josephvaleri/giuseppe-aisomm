@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed-jokes.ts",
-    "setup-storage": "tsx scripts/setup-storage.ts"
+    "setup-storage": "tsx scripts/setup-storage.ts",
+    "setup-label-storage": "tsx scripts/setup-label-storage.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -35,6 +36,7 @@
     "framer-motion": "^12.23.18",
     "lucide-react": "^0.544.0",
     "mammoth": "^1.11.0",
+    "nanoid": "^5.0.4",
     "next": "15.5.3",
     "openai": "^5.22.0",
     "papaparse": "^5.5.3",
@@ -43,6 +45,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.63.0",
+    "sharp": "^0.33.5",
     "tailwind-merge": "^3.3.1",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76"

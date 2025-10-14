@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { AuthWrapper } from '@/components/auth/auth-wrapper'
-import { Check, X, Edit } from 'lucide-react'
+import { Check, X, Edit, Wine, MessageSquare } from 'lucide-react'
+import Image from 'next/image'
 
 interface ModerationItem {
   id: number
@@ -20,16 +22,73 @@ interface ModerationItem {
 
 function ModerationPageContent() {
   const [items, setItems] = useState<ModerationItem[]>([])
+  const [wineItems, setWineItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingWines, setIsLoadingWines] = useState(true)
   const [selectedItem, setSelectedItem] = useState<ModerationItem | null>(null)
+  const [selectedWine, setSelectedWine] = useState<any>(null)
   const [editedAnswer, setEditedAnswer] = useState('')
+  const [editedWine, setEditedWine] = useState<Record<number, any>>({})
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   
   const supabase = createClient()
   const router = useRouter()
 
+  // Get signed image URL from storage (for private buckets)
+  const getImageUrl = async (imageKey: string) => {
+    if (!imageKey) return null
+    try {
+      const { data, error } = await supabase.storage
+        .from('label-images')
+        .createSignedUrl(imageKey, 3600) // 1 hour expiry
+      
+      if (error) {
+        console.error('Error getting signed URL:', error)
+        return null
+      }
+      
+      return data.signedUrl
+    } catch (err) {
+      console.error('Error creating signed URL:', err)
+      return null
+    }
+  }
+
   useEffect(() => {
     loadModerationItems()
+    loadWineItems()
   }, [])
+
+  // Load image URL when wine is selected
+  useEffect(() => {
+    const loadImageUrl = async () => {
+      if (selectedWine?.image_key) {
+        const url = await getImageUrl(selectedWine.image_key)
+        setImageUrl(url)
+      } else {
+        setImageUrl(null)
+      }
+    }
+    loadImageUrl()
+  }, [selectedWine])
+
+  const loadWineItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('moderation_items_wines')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setWineItems(data || [])
+    } catch (error) {
+      console.error('Error loading wine items:', error)
+    } finally {
+      setIsLoadingWines(false)
+    }
+  }
 
   const loadModerationItems = async () => {
     try {
@@ -97,6 +156,54 @@ function ModerationPageContent() {
       console.error('Error loading moderation items:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleAcceptWine = async (modId: number) => {
+    try {
+      const editData = editedWine[modId] || {}
+      
+      const res = await fetch(`/api/moderation/wines/${modId}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ editedData: editData })
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to accept wine')
+      }
+
+      // Reload wine items
+      await loadWineItems()
+      setSelectedWine(null)
+      alert('Wine accepted and added to database!')
+    } catch (error) {
+      console.error('Error accepting wine:', error)
+      alert('Error accepting wine')
+    }
+  }
+
+  const handleDenyWine = async (modId: number) => {
+    if (!confirm('Are you sure you want to deny this wine? This will delete the record and image.')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/moderation/wines/${modId}/deny`, {
+        method: 'POST'
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to deny wine')
+      }
+
+      // Reload wine items
+      await loadWineItems()
+      setSelectedWine(null)
+      alert('Wine denied and removed')
+    } catch (error) {
+      console.error('Error denying wine:', error)
+      alert('Error denying wine')
     }
   }
 
@@ -191,7 +298,7 @@ function ModerationPageContent() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-amber-900">Moderation Queue</h1>
-              <p className="text-amber-700">Review and moderate Q&A pairs</p>
+              <p className="text-amber-700">Review Q&A pairs and wine label submissions</p>
             </div>
             <Button
               onClick={() => router.push('/admin')}
@@ -202,7 +309,20 @@ function ModerationPageContent() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Tabs defaultValue="questions" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+              <TabsTrigger value="questions" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Question Quality ({items.length})
+              </TabsTrigger>
+              <TabsTrigger value="wines" className="flex items-center gap-2">
+                <Wine className="w-4 h-4" />
+                Wine Labels ({wineItems.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="questions">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Items List */}
             <div className="lg:col-span-2">
               <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
@@ -312,7 +432,191 @@ function ModerationPageContent() {
                 </Card>
               )}
             </div>
-          </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="wines">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Wine Items List */}
+                <div className="lg:col-span-2">
+                  <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
+                    <h2 className="text-xl font-semibold text-amber-900 mb-4">
+                      Pending Wine Labels ({wineItems.length})
+                    </h2>
+                    
+                    {isLoadingWines ? (
+                      <p className="text-amber-600">Loading...</p>
+                    ) : wineItems.length === 0 ? (
+                      <p className="text-amber-600">No pending wine labels</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {wineItems.map((wine) => (
+                          <div
+                            key={wine.mod_id}
+                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                              selectedWine?.mod_id === wine.mod_id
+                                ? 'border-amber-500 bg-amber-50'
+                                : 'border-amber-200 hover:border-amber-300'
+                            }`}
+                            onClick={() => {
+                              setSelectedWine(wine)
+                              setEditedWine({})
+                            }}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h3 className="font-medium text-amber-900 mb-1">
+                                  {wine.producer} – {wine.wine_name || '(No wine name)'}
+                                  {wine.vintage && ` (${wine.vintage})`}
+                                </h3>
+                                <div className="flex gap-2 text-xs text-amber-600">
+                                  <Badge variant="outline" className="text-xs">
+                                    {wine.source}
+                                  </Badge>
+                                  <span>{new Date(wine.created_at).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {wine.country && (
+                              <p className="text-sm text-gray-600">{wine.wine_region}, {wine.country}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                </div>
+
+                {/* Wine Details Panel */}
+                <div>
+                  {selectedWine ? (
+                    <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
+                      <h3 className="text-lg font-semibold text-amber-900 mb-4">
+                        Review Wine
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {/* Image Preview */}
+                        {selectedWine.image_key && (
+                          <div className="mb-4">
+                            <p className="text-sm font-medium text-amber-800 mb-2">Label Image</p>
+                            <div className="bg-gray-100 rounded-lg p-2 flex justify-center min-h-[200px] items-center">
+                              {imageUrl ? (
+                                <Image
+                                  src={imageUrl}
+                                  alt="Wine Label"
+                                  width={300}
+                                  height={400}
+                                  className="rounded object-contain max-h-96"
+                                  unoptimized
+                                />
+                              ) : (
+                                <p className="text-gray-500 text-sm">Loading image...</p>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 break-all">{selectedWine.image_key}</p>
+                          </div>
+                        )}
+
+                        {/* Editable Fields */}
+                        <div>
+                          <label className="block text-sm font-medium text-amber-800 mb-1">
+                            Producer
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={selectedWine.producer}
+                            onChange={(e) => setEditedWine(prev => ({ ...prev, [selectedWine.mod_id]: { ...prev[selectedWine.mod_id], producer: e.target.value }}))}
+                            className="w-full px-3 py-2 border border-amber-300 rounded-md text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-amber-800 mb-1">
+                            Wine Name
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={selectedWine.wine_name || ''}
+                            onChange={(e) => setEditedWine(prev => ({ ...prev, [selectedWine.mod_id]: { ...prev[selectedWine.mod_id], wine_name: e.target.value }}))}
+                            className="w-full px-3 py-2 border border-amber-300 rounded-md text-sm"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium text-amber-800 mb-1">
+                              Vintage
+                            </label>
+                            <input
+                              type="number"
+                              defaultValue={selectedWine.vintage || ''}
+                              onChange={(e) => setEditedWine(prev => ({ ...prev, [selectedWine.mod_id]: { ...prev[selectedWine.mod_id], vintage: parseInt(e.target.value) }}))}
+                              className="w-full px-3 py-2 border border-amber-300 rounded-md text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-amber-800 mb-1">
+                              Alcohol %
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              defaultValue={selectedWine.alcohol_percent || ''}
+                              onChange={(e) => setEditedWine(prev => ({ ...prev, [selectedWine.mod_id]: { ...prev[selectedWine.mod_id], alcohol_percent: parseFloat(e.target.value) }}))}
+                              className="w-full px-3 py-2 border border-amber-300 rounded-md text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        {selectedWine.confidence && (
+                          <div className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-xs font-medium text-gray-700 mb-2">Confidence Scores</p>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div className="flex justify-between">
+                                <span>Producer:</span>
+                                <span>{Math.round((selectedWine.confidence.producer || 0) * 100)}%</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Wine Name:</span>
+                                <span>{Math.round((selectedWine.confidence.wine_name || 0) * 100)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex space-x-2 pt-4 border-t">
+                          <Button
+                            onClick={() => handleAcceptWine(selectedWine.mod_id)}
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Accept
+                          </Button>
+                          <Button
+                            onClick={() => handleDenyWine(selectedWine.mod_id)}
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Deny
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
+                      <p className="text-amber-600 text-center">
+                        Select a wine to review
+                      </p>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

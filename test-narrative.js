@@ -30,3 +30,5 @@ console.log('Single paragraph:', result.trim().split(/\n{2,}/).length === 1)
 console.log('\n✅ Narrative formatting test completed!')
 
 
+
+

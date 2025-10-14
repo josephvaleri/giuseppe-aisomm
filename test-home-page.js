@@ -82,3 +82,5 @@ console.log('- Loading: Shows loading spinner while checking auth')
 console.log('- Non-authenticated: Giuseppe left, login right, trial message')
 console.log('- Authenticated: Full interface with Q&A functionality')
 
+
+

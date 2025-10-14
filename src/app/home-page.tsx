@@ -16,6 +16,7 @@ import GrapeDetail from '@/components/GrapeDetail'
 import GrapeLinkedText from '@/components/GrapeLinkedText'
 import { detectGrapeNames, getAllGrapeVarieties, createGrapeLinks, GrapeMatch } from '@/lib/grape-linking'
 import { useRouter } from 'next/navigation'
+import { LabelScannerCard } from '@/components/LabelScannerCard'
 
 type AvatarState = 'WAITING' | 'ANSWERING' | 'ERROR'
 
@@ -545,8 +546,11 @@ export default function HomePageContent() {
               </Card>
             </div>
 
-            {/* Right Column: Answers or Grape Detail */}
-            <div className="flex flex-col">
+            {/* Right Column: Label Scanner + Answers or Grape Detail */}
+            <div className="flex flex-col space-y-6">
+              {/* Label Scanner - NEW */}
+              <LabelScannerCard />
+              
               {selectedGrapeId ? (
                 <GrapeDetail 
                   grapeId={selectedGrapeId} 
