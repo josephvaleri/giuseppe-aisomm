@@ -13,9 +13,17 @@ export interface CellarItem {
   currency: string
   status: 'stored' | 'drank' | 'lost'
   my_notes?: string
-  my_rating?: number
+  my_rating?: number // 1-5 wine glasses
   created_at: string
   updated_at: string
+  // Wine details fields (can be overridden by user)
+  drink_starting?: string
+  drink_by?: string
+  typical_price?: number
+  ratings?: string
+  color?: string
+  alcohol?: number
+  bottle_size?: string
 }
 
 export interface Wine {

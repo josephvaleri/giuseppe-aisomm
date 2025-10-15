@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       imageKey,
       source, // 'label_scan' | 'manual' | 'ai_search'
       saveToCellar = false,
+      cellarQuantity = 0,
       openaiTraceId
     } = body
 
@@ -39,6 +40,114 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid source' },
         { status: 400 }
       )
+    }
+
+    // Check if this is a high-confidence AI search result that can bypass moderation
+    // For AI search results, we consider them high-confidence if they came from auto-trigger (≥80% label extraction)
+    const isHighConfidenceAI = source === 'ai_search' && selection.wineData && selection.confidence >= 0.80
+    
+    if (isHighConfidenceAI) {
+      console.log('[COMMIT] High-confidence AI result detected - bypassing moderation')
+      
+      // Look up foreign key IDs (same logic as moderation accept)
+      let countryId = null
+      let regionId = null
+      let appellationId = null
+
+      if (selection.wineData.country) {
+        const { data: countryData } = await supabase
+          .from('countries_regions')
+          .select('country_id')
+          .ilike('country_name', selection.wineData.country)
+          .limit(1)
+          .maybeSingle()
+        countryId = countryData?.country_id || null
+      }
+
+      if (selection.wineData.wine_region) {
+        const { data: regionData } = await supabase
+          .from('countries_regions')
+          .select('region_id')
+          .ilike('wine_region', selection.wineData.wine_region)
+          .limit(1)
+          .maybeSingle()
+        regionId = regionData?.region_id || null
+      }
+
+      if (selection.wineData.appellation) {
+        const { data: appellationData } = await supabase
+          .from('appellation')
+          .select('appellation_id')
+          .ilike('appellation', selection.wineData.appellation)
+          .limit(1)
+          .maybeSingle()
+        appellationId = appellationData?.appellation_id || null
+      }
+
+      // Format ratings as string (same as moderation accept)
+      const formatRatingsString = (ratings: any) => {
+        if (!ratings || typeof ratings !== 'object') return null
+        return Object.entries(ratings)
+          .map(([pub, score]) => `${pub}: ${score}`)
+          .join(', ')
+      }
+
+      const ratingsString = formatRatingsString(selection.wineData.ratings)
+
+      // Add wine directly to wines table using correct structure
+      const { data: wineData, error: wineError } = await supabase
+        .from('wines')
+        .insert({
+          producer: selection.wineData.producer,
+          wine_name: selection.wineData.wine_name,
+          vintage: selection.wineData.vintage,
+          alcohol: selection.wineData.alcohol_percent,
+          typical_price: selection.wineData.typical_price,
+          bottle_size: selection.wineData.bottle_size,
+          color: selection.wineData.color,
+          ratings: ratingsString,
+          flavor_profile: selection.wineData.flavor_profile,
+          country_id: countryId,
+          region_id: regionId,
+          appellation_id: appellationId,
+          drink_starting: selection.wineData.drink_starting,
+          drink_by: selection.wineData.drink_by,
+          my_score: null
+        })
+        .select('wine_id')
+        .single()
+
+      if (wineError) {
+        console.error('Error inserting wine:', wineError)
+        return NextResponse.json(
+          { error: 'Failed to add wine to database' },
+          { status: 500 }
+        )
+      }
+
+      // If user wants to save to cellar, add to cellar_items
+      if (saveToCellar && cellarQuantity > 0) {
+        const { error: cellarError } = await supabase
+          .from('cellar_items')
+          .insert({
+            user_id: user.id,
+            wine_id: wineData.wine_id,
+            quantity: cellarQuantity,
+            status: 'stored'
+          })
+
+        if (cellarError) {
+          console.error('Error adding to cellar:', cellarError)
+          // Don't fail the whole operation, just log the error
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        wineId: wineData.wine_id,
+        redirectUrl: `/wines/${wineData.wine_id}`,
+        message: `Wine added successfully${saveToCellar && cellarQuantity > 0 ? ` and ${cellarQuantity} bottle(s) added to your cellar` : ''}.`
+      })
     }
 
     // Insert into moderation queue
@@ -73,6 +182,7 @@ export async function POST(request: NextRequest) {
         candidate_json: selection.candidates || null,
         openai_trace_id: openaiTraceId || null,
         save_to_cellar: saveToCellar,
+        cellar_quantity: cellarQuantity || 0,
         status: 'pending'
       })
       .select('mod_id')

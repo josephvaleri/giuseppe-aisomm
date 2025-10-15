@@ -84,8 +84,8 @@ export default function AnimationSettingsPage() {
     try {
       const { data, error } = await supabase
         .from('settings')
-        .select('*')
-        .eq('key', 'animation_settings')
+        .select('animation_settings')
+        .eq('id', 1)
         .single()
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -93,8 +93,8 @@ export default function AnimationSettingsPage() {
         return
       }
 
-      if (data?.value) {
-        setSettings({ ...defaultSettings, ...data.value })
+      if (data?.animation_settings) {
+        setSettings({ ...defaultSettings, ...data.animation_settings })
       }
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -110,11 +110,11 @@ export default function AnimationSettingsPage() {
     try {
       const { error } = await supabase
         .from('settings')
-        .upsert({
-          key: 'animation_settings',
-          value: settings,
+        .update({
+          animation_settings: settings,
           updated_at: new Date().toISOString()
         })
+        .eq('id', 1)
 
       if (error) {
         console.error('Error saving settings:', error)

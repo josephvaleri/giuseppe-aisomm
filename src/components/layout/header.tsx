@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { User, LogOut, Wine } from 'lucide-react'
+import { User, LogOut } from 'lucide-react'
 import Link from 'next/link'
+import { HamburgerMenu } from './HamburgerMenu'
 
 export function Header() {
   const [user, setUser] = useState<any>(null)
@@ -50,26 +51,19 @@ export function Header() {
     <header className="bg-white/90 backdrop-blur-sm border-b border-amber-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">G</span>
-            </div>
-            <span className="text-amber-900 font-semibold">Giuseppe</span>
-          </Link>
+          <div className="flex items-center space-x-3">
+            {user && <HamburgerMenu user={user} />}
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">G</span>
+              </div>
+              <span className="text-amber-900 font-semibold">Giuseppe</span>
+            </Link>
+          </div>
           
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-3">
-                <Link href="/cellar">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-amber-300 text-amber-700 hover:bg-amber-50"
-                  >
-                    <Wine className="w-4 h-4 mr-2" />
-                    My Cellar
-                  </Button>
-                </Link>
                 <div className="flex items-center space-x-2 text-amber-700">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.email}</span>

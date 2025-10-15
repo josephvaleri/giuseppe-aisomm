@@ -95,6 +95,7 @@ export default function HomePageContent() {
       const { data, error } = await supabase
         .from('settings')
         .select('trial_days')
+        .eq('id', 1)
         .single()
 
       if (error) throw error
@@ -110,6 +111,7 @@ export default function HomePageContent() {
       const { data, error } = await supabase
         .from('settings')
         .select('announcement')
+        .eq('id', 1)
         .single()
 
       if (error) throw error
@@ -486,7 +488,14 @@ export default function HomePageContent() {
                     variant={avatarState === 'ERROR' ? 'destructive' : 'default'}
                     className="mb-4"
                   >
-                    {avatarState === 'WAITING' && 'Ready to help'}
+                    {avatarState === 'WAITING' && (
+                      <button 
+                        onClick={() => router.push('/about')}
+                        className="hover:underline cursor-pointer"
+                      >
+                        Meet Giuseppe
+                      </button>
+                    )}
                     {avatarState === 'ANSWERING' && 'Thinking...'}
                     {avatarState === 'ERROR' && 'Oops!'}
                   </Badge>

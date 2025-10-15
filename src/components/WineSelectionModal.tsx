@@ -21,6 +21,7 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
   const [aiResult, setAiResult] = useState<any>(null)
   const [isCommitting, setIsCommitting] = useState(false)
   const [saveToCellar, setSaveToCellar] = useState(false)
+  const [cellarQuantity, setCellarQuantity] = useState(1)
   
   const router = useRouter()
   const { toast } = useToast()
@@ -32,7 +33,8 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
       setAiResult({
         wineData: data.wineData,
         traceId: data.traceId,
-        source: data.source || 'openai_auto'
+        source: data.source || 'openai_auto',
+        confidence: 0.85 // High confidence for auto-triggered AI results
       })
     }
   }, [data, aiResult])
@@ -96,6 +98,7 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
           imageKey,
           source,
           saveToCellar,
+          cellarQuantity: saveToCellar ? cellarQuantity : 0,
           openaiTraceId: aiResult?.traceId
         })
       })
@@ -239,7 +242,7 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
 
         <Button
           className="w-full mt-4 bg-purple-600 hover:bg-purple-700"
-          onClick={() => handleSelectWine({ wineData: wine }, 'ai_search')}
+          onClick={() => handleSelectWine({ wineData: wine, confidence: aiResult.confidence || 0.85 }, 'ai_search')}
           disabled={isCommitting}
         >
           {isCommitting ? (
@@ -326,17 +329,36 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
           </div>
         )}
 
-        <div className="flex items-center gap-2 pt-4 border-t">
-          <input
-            type="checkbox"
-            id="saveToCellar"
-            checked={saveToCellar}
-            onChange={(e) => setSaveToCellar(e.target.checked)}
-            className="rounded"
-          />
-          <label htmlFor="saveToCellar" className="text-sm text-gray-700">
-            Save to my cellar after approval
-          </label>
+        <div className="pt-4 border-t space-y-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="saveToCellar"
+              checked={saveToCellar}
+              onChange={(e) => setSaveToCellar(e.target.checked)}
+              className="rounded"
+            />
+            <label htmlFor="saveToCellar" className="text-sm text-gray-700">
+              Save to my cellar after approval
+            </label>
+          </div>
+          
+          {saveToCellar && (
+            <div className="flex items-center gap-2 ml-6">
+              <label htmlFor="cellarQuantity" className="text-sm text-gray-700">
+                Quantity:
+              </label>
+              <input
+                type="number"
+                id="cellarQuantity"
+                min="1"
+                max="100"
+                value={cellarQuantity}
+                onChange={(e) => setCellarQuantity(parseInt(e.target.value) || 1)}
+                className="w-20 px-2 py-1 text-sm border border-gray-300 rounded"
+              />
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -82,8 +82,8 @@ export function useAnimationSettings() {
     try {
       const { data, error } = await supabase
         .from('settings')
-        .select('*')
-        .eq('key', 'animation_settings')
+        .select('animation_settings')
+        .eq('id', 1)
         .single();
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
@@ -91,8 +91,8 @@ export function useAnimationSettings() {
         return;
       }
 
-      if (data?.value) {
-        setSettings({ ...defaultSettings, ...data.value });
+      if (data?.animation_settings) {
+        setSettings({ ...defaultSettings, ...data.animation_settings });
       }
     } catch (error) {
       console.error('Error loading animation settings:', error);

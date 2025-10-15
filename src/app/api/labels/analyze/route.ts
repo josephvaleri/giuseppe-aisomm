@@ -176,12 +176,13 @@ export async function POST(request: NextRequest) {
         .eq('job_id', jobId)
     }
 
-    // Auto-trigger AI search if we have a high-confidence result (80%+)
-    const highConfidenceMatch = matchResult.candidates.find(c => c.confidence >= 0.80)
+    // Auto-trigger AI search if we have high-confidence label extraction (80%+)
+    const parsedConfidence = (parsed.confidence.producer + parsed.confidence.wine_name) / 2
+    const shouldAutoTrigger = parsedConfidence >= 0.80
     
-    if (highConfidenceMatch) {
-      console.log(`[ANALYZE] 🎯 High-confidence match found (${Math.round(highConfidenceMatch.confidence * 100)}%) - auto-triggering AI search`)
-      console.log(`[ANALYZE] Candidates count: ${matchResult.candidates.length}, Top confidence: ${Math.round(matchResult.candidates[0].confidence * 100)}%`)
+    if (shouldAutoTrigger) {
+      console.log(`[ANALYZE] 🎯 High-confidence label extraction (${Math.round(parsedConfidence * 100)}%) - auto-triggering AI search`)
+      console.log(`[ANALYZE] Producer confidence: ${Math.round(parsed.confidence.producer * 100)}%, Wine name confidence: ${Math.round(parsed.confidence.wine_name * 100)}%`)
       
       // Check if OpenAI API key is configured
       if (!process.env.OPENAI_API_KEY) {
@@ -267,7 +268,7 @@ Return the data in this exact JSON structure:
         }
       }
     } else {
-      console.log(`[ANALYZE] No high-confidence match found (highest: ${matchResult.candidates[0] ? Math.round(matchResult.candidates[0].confidence * 100) : 0}%)`)
+      console.log(`[ANALYZE] No high-confidence label extraction (parsed confidence: ${Math.round(parsedConfidence * 100)}%)`)
     }
     
     // Return results based on matching outcome
