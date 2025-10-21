@@ -244,7 +244,7 @@ export default function CellarPage() {
               </Button>
               
               <Button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => router.push('/add-wine')}
                 className="bg-amber-600 hover:bg-amber-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -688,7 +688,7 @@ export default function CellarPage() {
               </p>
               {(!searchTerm && filterStatus === 'all') && (
                 <Button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => router.push('/add-wine')}
                   className="bg-amber-600 hover:bg-amber-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />

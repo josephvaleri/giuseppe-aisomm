@@ -76,7 +76,7 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
           <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-amber-200 rounded-lg shadow-lg z-50">
             <div className="py-2">
               {/* Add Wine Button */}
-              <Link href="/cellar" onClick={closeMenu}>
+              <Link href="/add-wine" onClick={closeMenu}>
                 <div className="flex items-center px-4 py-3 text-amber-700 hover:bg-amber-50 cursor-pointer">
                   <Plus className="w-4 h-4 mr-3" />
                   <span className="text-sm font-medium">Add Wine to Cellar</span>
