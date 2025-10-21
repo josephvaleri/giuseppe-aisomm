@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { EditWineModal } from '@/components/cellar/EditWineModal'
 import { CellarItem } from '@/types/cellar'
+import { isWineReadyToDrink, getReadyToDrinkStatus } from '@/lib/utils/wine-utils'
 
 interface Wine {
   wine_id: number
@@ -138,11 +139,11 @@ export default function WineDetailPage() {
           <div className="mb-6">
             <div className="flex justify-between items-start mb-4">
               <Button 
-                onClick={() => router.push('/')} 
+                onClick={() => router.push('/cellar')} 
                 variant="outline"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Home
+                Back to Cellar
               </Button>
               
               {cellarItem && (
@@ -273,9 +274,48 @@ export default function WineDetailPage() {
             {/* Drink Window */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-amber-900">Drink Window</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-amber-900">Drink Window</CardTitle>
+                  {isWineReadyToDrink(wine.drink_starting, wine.drink_by) && (
+                    <span className="text-green-600 text-xl" title="Ready to drink now!">
+                      ✓
+                    </span>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
+                {wine.drink_starting && wine.drink_by && (
+                  <div className="mb-3">
+                    {(() => {
+                      const status = getReadyToDrinkStatus(wine.drink_starting, wine.drink_by)
+                      console.log('Wine status debug:', {
+                        wine: wine.wine_name,
+                        drink_starting: wine.drink_starting,
+                        drink_by: wine.drink_by,
+                        status: status.status,
+                        message: status.message
+                      })
+                      return (
+                        <div className={`p-2 rounded-md text-sm ${
+                          status.status === 'ready' 
+                            ? 'bg-green-100 text-green-800 border border-green-200' 
+                            : status.status === 'past-peak'
+                            ? 'bg-red-100 text-red-800 border border-red-200'
+                            : status.status === 'not-ready'
+                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            {status.status === 'ready' && <span className="text-green-600">✓</span>}
+                            {status.status === 'past-peak' && <span className="text-red-600">⚠️</span>}
+                            {status.status === 'not-ready' && <span className="text-yellow-600">⏳</span>}
+                            <span className="font-medium">{status.message}</span>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
                 {wine.drink_starting && (
                   <div className="flex justify-between">
                     <span className="font-medium">Drink From:</span>

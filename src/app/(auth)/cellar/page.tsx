@@ -11,10 +11,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CellarItem, Wine as WineType } from '@/types/cellar'
 import { AddWineModal } from '@/components/cellar/AddWineModal'
 import { EditWineModal } from '@/components/cellar/EditWineModal'
-import { CSVUploadModal } from '@/components/cellar/CSVUploadModal'
 import { WineMatchModal } from '@/components/cellar/WineMatchModal'
+import { BottleSelectorModal } from '@/components/cellar/BottleSelectorModal'
 import { WineGlassRating } from '@/components/ui/wine-glass-rating'
-import Papa from 'papaparse'
+import { isWineReadyToDrink, getReadyToDrinkStatus } from '@/lib/utils/wine-utils'
 
 export default function CellarPage() {
   const [cellarItems, setCellarItems] = useState<CellarItem[]>([])
@@ -23,8 +23,8 @@ export default function CellarPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showCSVModal, setShowCSVModal] = useState(false)
   const [showMatchModal, setShowMatchModal] = useState(false)
+  const [showBottleSelector, setShowBottleSelector] = useState(false)
   const [editingItem, setEditingItem] = useState<CellarItem | null>(null)
   const [matchedWines, setMatchedWines] = useState<any[]>([])
   const [pendingWine, setPendingWine] = useState<any>(null)
@@ -145,56 +145,6 @@ export default function CellarPage() {
     }
   }
 
-  const downloadSampleCSV = () => {
-    const sampleData = [
-      {
-        wine_name: 'Château Margaux',
-        producer: 'Château Margaux',
-        vintage: 2015,
-        appellation: 'Margaux',
-        country: 'France',
-        region: 'Bordeaux',
-        quantity: 1,
-        where_stored: 'Wine cellar',
-        value: 500.00,
-        currency: 'USD',
-        my_notes: 'Excellent vintage with full-bodied notes',
-        my_rating: 9,
-        status: 'stored',
-        bottle_size: '750ml',
-        alcohol: '13.5%',
-        barcode: '123456789012'
-      },
-      {
-        wine_name: 'Barolo Brunate',
-        producer: 'Vietti',
-        vintage: 2018,
-        appellation: 'Barolo',
-        country: 'Italy',
-        region: 'Piedmont',
-        quantity: 2,
-        where_stored: 'Wine cellar',
-        value: 120.00,
-        currency: 'USD',
-        my_notes: 'Classic Barolo with great aging potential',
-        my_rating: 8,
-        status: 'stored',
-        bottle_size: '750ml',
-        alcohol: '14.0%',
-        barcode: '123456789013'
-      }
-    ]
-
-    const csvContent = Papa.unparse(sampleData)
-
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `sample_cellar_import_v${Date.now()}.csv`
-    a.click()
-    window.URL.revokeObjectURL(url)
-  }
 
   if (isLoading) {
     return (
@@ -272,44 +222,36 @@ export default function CellarPage() {
               </select>
               
               <Button
+                onClick={() => router.push('/cellar/import')}
+                variant="outline"
+                className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import Wine
+              </Button>
+            </div>
+          </div>
+
+          {/* View Toggle and Select a Bottle Button */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowBottleSelector(true)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Wine className="w-4 h-4 mr-2" />
+                Select a Bottle
+              </Button>
+              
+              <Button
                 onClick={() => setShowAddModal(true)}
                 className="bg-amber-600 hover:bg-amber-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Wine
               </Button>
-              
-              <Button
-                onClick={() => setShowCSVModal(true)}
-                variant="outline"
-                className="border-amber-300 text-amber-700 hover:bg-amber-50"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Import CSV
-              </Button>
-              
-              <Button
-                onClick={downloadSampleCSV}
-                variant="outline"
-                className="border-amber-300 text-amber-700 hover:bg-amber-50"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Sample CSV
-              </Button>
-              
-              <Button
-                onClick={() => router.push('/cellar/import')}
-                variant="outline"
-                className="border-green-300 text-green-700 hover:bg-green-50"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Import CellarTracker
-              </Button>
             </div>
-          </div>
-
-          {/* View Toggle */}
-          <div className="flex justify-end mb-4">
+            
             <div className="flex bg-white/80 backdrop-blur-sm border border-amber-200 rounded-lg p-1">
               <Button
                 onClick={() => setViewMode('card')}
@@ -399,9 +341,16 @@ export default function CellarPage() {
                       <div className="space-y-4">
                         {/* Wine Info */}
                         <div>
-                          <h3 className="font-bold text-amber-900 text-lg mb-1">
-                            {item.wine_name}
-                          </h3>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-amber-900 text-lg">
+                              {item.wine_name}
+                            </h3>
+                            {isWineReadyToDrink(item.drink_starting, item.drink_by) && (
+                              <span className="text-green-600 text-lg" title="Ready to drink now!">
+                                ✓
+                              </span>
+                            )}
+                          </div>
                           <p className="text-amber-700 text-sm mb-2">
                             {item.producer} {item.vintage && `(${item.vintage})`}
                           </p>
@@ -426,11 +375,34 @@ export default function CellarPage() {
                               </div>
                             )}
                             {item.drink_starting && item.drink_by && (
-                              <div className="flex justify-between">
-                                <span>Drink Window:</span>
-                                <span>
-                                  {new Date(item.drink_starting).toLocaleDateString()} - {new Date(item.drink_by).toLocaleDateString()}
-                                </span>
+                              <div>
+                                <div className="flex justify-between mb-1">
+                                  <span>Drink Window:</span>
+                                  <span>
+                                    {new Date(item.drink_starting).toLocaleDateString()} - {new Date(item.drink_by).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                {(() => {
+                                  const status = getReadyToDrinkStatus(item.drink_starting, item.drink_by)
+                                  return (
+                                    <div className={`p-1 rounded text-xs ${
+                                      status.status === 'ready' 
+                                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                                        : status.status === 'past-peak'
+                                        ? 'bg-red-100 text-red-800 border border-red-200'
+                                        : status.status === 'not-ready'
+                                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                        : 'bg-gray-100 text-gray-800 border border-gray-200'
+                                    }`}>
+                                      <div className="flex items-center gap-1">
+                                        {status.status === 'ready' && <span className="text-green-600">✓</span>}
+                                        {status.status === 'past-peak' && <span className="text-red-600">⚠️</span>}
+                                        {status.status === 'not-ready' && <span className="text-yellow-600">⏳</span>}
+                                        <span className="font-medium">{status.message}</span>
+                                      </div>
+                                    </div>
+                                  )
+                                })()}
                               </div>
                             )}
                             {item.alcohol && (
@@ -584,7 +556,14 @@ export default function CellarPage() {
                       >
                         <td className="px-4 py-3">
                           <div>
-                            <div className="font-medium text-amber-900">{item.wine_name}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium text-amber-900">{item.wine_name}</div>
+                              {isWineReadyToDrink(item.drink_starting, item.drink_by) && (
+                                <span className="text-green-600 text-lg" title="Ready to drink now!">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
                             <div className="text-sm text-amber-700">{item.producer}</div>
                           </div>
                         </td>
@@ -607,9 +586,28 @@ export default function CellarPage() {
                           {item.quantity}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge className={getStatusColor(item.status)}>
-                            {getStatusIcon(item.status)} {item.status}
-                          </Badge>
+                          {(() => {
+                            const drinkStatus = item.drink_starting && item.drink_by 
+                              ? getReadyToDrinkStatus(item.drink_starting, item.drink_by)
+                              : null
+                            
+                            // Determine background color based on drink window status
+                            const getDrinkWindowColor = () => {
+                              if (!drinkStatus) return 'bg-gray-100 text-gray-800'
+                              switch (drinkStatus.status) {
+                                case 'ready': return 'bg-green-100 text-green-800'
+                                case 'past-peak': return 'bg-red-100 text-red-800'
+                                case 'not-ready': return 'bg-yellow-100 text-yellow-800'
+                                default: return 'bg-gray-100 text-gray-800'
+                              }
+                            }
+                            
+                            return (
+                              <Badge className={getDrinkWindowColor()}>
+                                {getStatusIcon(item.status)} {item.status}
+                              </Badge>
+                            )
+                          })()}
                         </td>
                         <td className="px-4 py-3">
                           <div onClick={(e) => e.stopPropagation()}>
@@ -721,12 +719,6 @@ export default function CellarPage() {
         onWineUpdated={loadCellarItems}
       />
 
-      <CSVUploadModal
-        isOpen={showCSVModal}
-        onClose={() => setShowCSVModal(false)}
-        onWinesImported={loadCellarItems}
-      />
-
       <WineMatchModal
         isOpen={showMatchModal}
         onClose={() => setShowMatchModal(false)}
@@ -742,6 +734,15 @@ export default function CellarPage() {
           // Handle no match - create new wine
           setShowMatchModal(false)
           setShowAddModal(false)
+          loadCellarItems()
+        }}
+      />
+
+      <BottleSelectorModal
+        isOpen={showBottleSelector}
+        onClose={() => setShowBottleSelector(false)}
+        onBottleSelected={(bottleId) => {
+          // Refresh cellar items after bottle removal
           loadCellarItems()
         }}
       />

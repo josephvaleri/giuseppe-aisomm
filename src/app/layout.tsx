@@ -7,6 +7,12 @@ import { Toaster } from '@/components/ui/toaster'
 export const metadata: Metadata = {
   title: 'Giuseppe the AISomm',
   description: 'Your personal wine expert, ready to answer any question',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
+  },
 }
 
 export default function RootLayout({
