@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { recomputeBadges } from '@/lib/badges/events'
 
 /**
  * POST /api/labels/commit
@@ -142,6 +143,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Recompute badges after wine addition
+      try {
+        await recomputeBadges(user.id);
+      } catch (badgeError) {
+        console.error('Badge recomputation error:', badgeError);
+        // Don't fail the request if badge recomputation fails
+      }
+
       return NextResponse.json({
         success: true,
         wineId: wineData.wine_id,
@@ -194,6 +203,14 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create moderation item' },
         { status: 500 }
       )
+    }
+
+    // Recompute badges after label scan submission
+    try {
+      await recomputeBadges(user.id);
+    } catch (badgeError) {
+      console.error('Badge recomputation error:', badgeError);
+      // Don't fail the request if badge recomputation fails
     }
 
     // Return redirect URL to wine detail page (pending state)

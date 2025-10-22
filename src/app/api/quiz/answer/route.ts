@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { recomputeBadges } from '@/lib/badges/events';
 
 export async function POST(req: Request) {
   try {
@@ -26,6 +27,14 @@ export async function POST(req: Request) {
     if (error && error.code !== '23505') {
       console.error('Database error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    // Recompute badges after quiz progress update
+    try {
+      await recomputeBadges(user_id);
+    } catch (badgeError) {
+      console.error('Badge recomputation error:', badgeError);
+      // Don't fail the request if badge recomputation fails
     }
     
     return NextResponse.json({ is_correct });

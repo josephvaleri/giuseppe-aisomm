@@ -204,3 +204,133 @@ export async function getAromaTerms() {
   if (error) throw error;
   return data;
 }
+
+export async function deleteTastingNote(noteId: number) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Delete aroma associations first
+  const { error: aromaError } = await supabase
+    .from("tasting_note_aromas")
+    .delete()
+    .eq("note_id", noteId);
+
+  if (aromaError) {
+    console.error('Error deleting aroma associations:', aromaError);
+    throw aromaError;
+  }
+
+  // Delete the tasting note
+  const { error } = await supabase
+    .from("tasting_notes")
+    .delete()
+    .eq("note_id", noteId)
+    .eq("user_id", user.id); // Ensure user can only delete their own notes
+
+  if (error) {
+    console.error('Error deleting tasting note:', error);
+    throw error;
+  }
+
+  revalidatePath("/tasting-notebook");
+}
+
+export async function updateTastingNote(noteId: number, input: TastingNoteInput) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    throw new Error("Not authenticated");
+  }
+
+  const parsed = TastingNoteSchema.parse(input);
+
+  // Update the tasting note
+  const { data, error } = await supabase
+    .from("tasting_notes")
+    .update({
+      wine_name: parsed.wine_name,
+      producer: parsed.producer,
+      grapes: parsed.grapes,
+      vintage: parsed.vintage,
+      alcohol_pct: parsed.alcohol_pct,
+      country_id: parsed.country_id,
+      region_id: parsed.region_id,
+      price: parsed.price,
+      my_notes: parsed.my_notes,
+      drink_starting: parsed.drink_starting,
+      drink_by: parsed.drink_by,
+      bottle_size: parsed.bottle_size,
+      is_bubbly: parsed.is_bubbly,
+      appearance_color: parsed.appearance_color,
+      sweetness: parsed.sweetness,
+      acidity: parsed.acidity,
+      body: parsed.body,
+      tannin: parsed.tannin,
+      oak: parsed.oak,
+      old_world_bias: parsed.old_world_bias,
+      finish_len: parsed.finish_len,
+      rating_bottles: parsed.rating_bottles,
+      location: parsed.location,
+      updated_at: new Date().toISOString()
+    })
+    .eq("note_id", noteId)
+    .eq("user_id", user.id) // Ensure user can only update their own notes
+    .select("note_id")
+    .single();
+
+  if (error) {
+    console.error('Error updating tasting note:', error);
+    throw error;
+  }
+
+  // Update aroma associations
+  // First, delete existing associations
+  const { error: deleteAromaError } = await supabase
+    .from("tasting_note_aromas")
+    .delete()
+    .eq("note_id", noteId);
+
+  if (deleteAromaError) {
+    console.error('Error deleting aroma associations:', deleteAromaError);
+    throw deleteAromaError;
+  }
+
+  // Then, insert new associations
+  if (parsed.aroma_tags && parsed.aroma_tags.length > 0) {
+    // First, get the aroma_id for each aroma tag
+    const { data: aromaTerms, error: aromaTermsError } = await supabase
+      .from("aroma_terms")
+      .select("aroma_id, label")
+      .in("label", parsed.aroma_tags);
+
+    if (aromaTermsError) {
+      console.error('Error fetching aroma terms:', aromaTermsError);
+      throw aromaTermsError;
+    }
+
+    if (aromaTerms && aromaTerms.length > 0) {
+      const aromaInserts = aromaTerms.map(term => ({
+        note_id: noteId,
+        aroma_id: term.aroma_id
+      }));
+
+      const { error: insertAromaError } = await supabase
+        .from("tasting_note_aromas")
+        .insert(aromaInserts);
+
+      if (insertAromaError) {
+        console.error('Error inserting aroma associations:', insertAromaError);
+        throw insertAromaError;
+      }
+    }
+  }
+
+  revalidatePath("/tasting-notebook");
+  revalidatePath(`/tasting-notebook/${noteId}`);
+  return data.note_id as number;
+}

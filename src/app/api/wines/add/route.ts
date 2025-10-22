@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { recomputeBadges } from '@/lib/badges/events'
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,6 +98,14 @@ export async function POST(request: NextRequest) {
     if (cellarError) {
       console.error('Error adding to cellar:', cellarError)
       return NextResponse.json({ error: `Failed to add wine to cellar: ${cellarError.message}` }, { status: 500 })
+    }
+
+    // Recompute badges after wine addition
+    try {
+      await recomputeBadges(userId);
+    } catch (badgeError) {
+      console.error('Badge recomputation error:', badgeError);
+      // Don't fail the request if badge recomputation fails
     }
 
     return NextResponse.json({

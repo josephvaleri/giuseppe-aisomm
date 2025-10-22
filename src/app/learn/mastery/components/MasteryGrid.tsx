@@ -11,7 +11,7 @@ interface MasteryData {
 }
 
 const STUDY_AREAS = [
-  'Regions & Appellations',
+  'Regions and Appellations',
   'Grapes', 
   'Styles',
   'Pairings',
@@ -87,7 +87,7 @@ export default function MasteryGrid() {
     );
   }
   const studyAreas = [
-    { key: 'Regions & Appellations', color: 'from-blue-500 to-blue-600' },
+    { key: 'Regions and Appellations', color: 'from-blue-500 to-blue-600' },
     { key: 'Grapes', color: 'from-purple-500 to-purple-600' },
     { key: 'Styles', color: 'from-red-500 to-red-600' },
     { key: 'Pairings', color: 'from-green-500 to-green-600' },
