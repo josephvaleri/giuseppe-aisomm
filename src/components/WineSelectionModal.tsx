@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Loader2, Sparkles } from 'lucide-react'
+import { Loader2, Sparkles, BookMarked } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -165,10 +165,9 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
         {data.candidates.map((candidate: any, index: number) => (
           <div
             key={index}
-            className="p-4 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer"
-            onClick={() => handleSelectWine(candidate, data.source || 'label_scan')}
+            className="p-4 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h4 className="font-semibold text-amber-900">
                   {candidate.producer} – {candidate.wine_name}
@@ -192,6 +191,41 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
                   className="w-20 mt-2"
                 />
               </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1 bg-amber-600 hover:bg-amber-700"
+                onClick={() => handleSelectWine(candidate, data.source || 'label_scan')}
+                disabled={isCommitting}
+              >
+                {isCommitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Select This Wine'
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              onClick={() => {
+                const params = new URLSearchParams({
+                  wine_name: candidate.wine_name || '',
+                  producer: candidate.producer || '',
+                  vintage: candidate.vintage?.toString() || '',
+                  alcohol_pct: candidate.alcohol_percent?.toString() || '',
+                  bottle_size: candidate.bottle_size || '',
+                  is_bubbly: candidate.bubbly === 'Yes' ? 'true' : 'false'
+                });
+                router.push(`/tasting-notebook/new?${params.toString()}`);
+                onClose();
+              }}
+              >
+                <BookMarked className="w-4 h-4 mr-1" />
+                Tasting Note
+              </Button>
             </div>
           </div>
         ))}
@@ -233,27 +267,49 @@ export function WineSelectionModal({ open, onClose, data, imageKey }: WineSelect
               <p className="font-semibold">Ratings:</p>
               <ul className="ml-4">
                 {Object.entries(wine.ratings).map(([pub, score]) => (
-                  <li key={pub}>{pub}: {score}</li>
+                  <li key={pub}>{pub}: {String(score)}</li>
                 ))}
               </ul>
             </div>
           )}
         </div>
 
-        <Button
-          className="w-full mt-4 bg-purple-600 hover:bg-purple-700"
-          onClick={() => handleSelectWine({ wineData: wine, confidence: aiResult.confidence || 0.85 }, 'ai_search')}
-          disabled={isCommitting}
-        >
-          {isCommitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            'Select This Wine'
-          )}
-        </Button>
+        <div className="flex gap-2 mt-4">
+          <Button
+            className="flex-1 bg-purple-600 hover:bg-purple-700"
+            onClick={() => handleSelectWine({ wineData: wine, confidence: aiResult.confidence || 0.85 }, 'ai_search')}
+            disabled={isCommitting}
+          >
+            {isCommitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              'Select This Wine'
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            className="border-amber-300 text-amber-700 hover:bg-amber-50"
+            onClick={() => {
+              const wineData = wine;
+              const params = new URLSearchParams({
+                wine_name: wineData.wine_name || '',
+                producer: wineData.producer || '',
+                vintage: wineData.vintage?.toString() || '',
+                alcohol_pct: wineData.alcohol_percent?.toString() || '',
+                bottle_size: wineData.bottle_size || '',
+                is_bubbly: wineData.bubbly === 'Yes' ? 'true' : 'false'
+              });
+              router.push(`/tasting-notebook/new?${params.toString()}`);
+              onClose();
+            }}
+          >
+            <BookMarked className="w-4 h-4 mr-1" />
+            Tasting Note
+          </Button>
+        </div>
       </div>
     )
   }

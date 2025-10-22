@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Upload, Download, Search, Edit, Trash2, Wine } from 'lucide-react'
+import { Plus, Upload, Download, Search, Edit, Trash2, Wine, BookMarked } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -498,14 +498,35 @@ export default function CellarPage() {
                           <Button
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleEditItem(item)
+                              const params = new URLSearchParams({
+                                wine_name: item.wine_name || '',
+                                producer: item.producer || '',
+                                vintage: item.vintage?.toString() || '',
+                                alcohol_pct: item.alcohol?.toString() || '',
+                                country_id: item.country_id?.toString() || '',
+                                region_id: item.region_id?.toString() || '',
+                                bottle_size: item.bottle_size || '',
+                                is_bubbly: item.bubbly === 'Yes' ? 'true' : 'false'
+                              });
+                              router.push(`/tasting-notebook/new?${params.toString()}`)
                             }}
                             variant="outline"
                             size="sm"
                             className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50"
                           >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit
+                            <BookMarked className="w-3 h-3 mr-1" />
+                            Tasting Note
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditItem(item)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                          >
+                            <Edit className="w-3 h-3" />
                           </Button>
                           <Button
                             onClick={(e) => {
@@ -641,6 +662,28 @@ export default function CellarPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const params = new URLSearchParams({
+                                  wine_name: item.wine_name || '',
+                                  producer: item.producer || '',
+                                  vintage: item.vintage?.toString() || '',
+                                  alcohol_pct: item.alcohol?.toString() || '',
+                                  country_id: item.country_id?.toString() || '',
+                                  region_id: item.region_id?.toString() || '',
+                                  bottle_size: item.bottle_size || '',
+                                  is_bubbly: item.bubbly === 'Yes' ? 'true' : 'false'
+                                });
+                                router.push(`/tasting-notebook/new?${params.toString()}`)
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                              title="Add Tasting Note"
+                            >
+                              <BookMarked className="w-3 h-3" />
+                            </Button>
                             <Button
                               onClick={(e) => {
                                 e.stopPropagation()
