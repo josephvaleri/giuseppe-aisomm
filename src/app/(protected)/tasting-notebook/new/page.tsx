@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TastingNoteSchema, type TastingNoteInput } from "../schemas";
 import { createTastingNote } from "../_actions";
@@ -24,7 +24,7 @@ const DEFAULT_AROMAS = [
   "Citrus","Green Apple","Stone Fruit","Tropical","Red Berry","Blackberry","Blackcurrant","Cherry","Plum","Dried Fruit","Floral","Violet","Rose","Herbal","Mint","Eucalyptus","Vegetal","Bell Pepper","Savory","Meaty","Spice","Black Pepper","Clove","Cinnamon","Vanilla","Oak","Smoke","Toast","Coffee","Chocolate","Cocoa","Nutty","Honey","Mineral","Saline","Petrol","Earth","Mushroom","Leather","Tobacco"
 ];
 
-export default function NewNotePage() {
+function NewNotePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -802,5 +802,20 @@ export default function NewNotePage() {
         </Button>
       </div>
     </form>
+  );
+}
+
+export default function NewNotePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-amber-600">Loading tasting note form...</p>
+        </div>
+      </div>
+    }>
+      <NewNotePageContent />
+    </Suspense>
   );
 }
