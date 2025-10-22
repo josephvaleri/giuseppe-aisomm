@@ -1,0 +1,201 @@
+level,category,question,option_a,option_b,option_c,option_d,correct_answer,explanation
+Somm 1,Service & Storage,Ideal storage temperature for wine?,5°C,0°C,12-14°C (55°F),22°C,C,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Viognier,Pinot Gris,Chardonnay,Sauvignon Blanc,C,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Tannin,Color,Acidity,Alcohol,C,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 1,Service & Storage,Champagne should be served at?,7°C (45°F),16°C,20°C,10°C,A,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Acidity,Tannin,Alcohol,Color,A,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Acidic,Sweet,Drying on gums,Oily,C,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Service & Storage,Champagne should be served at?,16°C,20°C,10°C,7°C (45°F),D,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Skins,Dead yeast cells,Pips,Stems,B,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Sparkling & Fortified,Port wine originates from?,Portugal,France,Spain,Italy,A,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Moscato,Bordeaux blend,Pinot Grigio,Sancerre,B,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Tasting & Sensory,Legs on glass show?,Tannin,Alcohol/sugar content,Acidity,Color,B,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 1,Tasting & Sensory,High acidity gives?,Freshness and crispness,Bitterness,Sweetness,Softness,A,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 1,Wine Law & Labels,Grand Cru in Burgundy means?,Entry level,Top vineyard classification,Village wine,Regional blend,B,Top vineyard classification is correct because it best represents the topic of wine law & labels.
+Somm 1,Tasting & Sensory,Legs on glass show?,Acidity,Alcohol/sugar content,Tannin,Color,B,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 1,Service & Storage,Champagne should be served at?,10°C,7°C (45°F),16°C,20°C,B,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Service & Storage,Ideal storage temperature for wine?,12-14°C (55°F),5°C,0°C,22°C,A,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Tasting & Sensory,High acidity gives?,Softness,Sweetness,Freshness and crispness,Bitterness,C,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Oily,Sweet,Acidic,Drying on gums,D,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Food Pairing,Oysters call for?,Cabernet,Syrah,Amarone,Champagne or Muscadet,D,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 1,Sparkling & Fortified,Champagne gets bubbles from?,Secondary fermentation,Yeast addition only,Still fermentation,CO2 injection,A,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Sparkling & Fortified,Port wine originates from?,France,Spain,Portugal,Italy,C,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Grapes & Styles,Which grape is the backbone of Chianti?,Dolcetto,Nebbiolo,Sangiovese,Barbera,C,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 1,Service & Storage,Champagne should be served at?,10°C,16°C,20°C,7°C (45°F),D,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Moscato,Sancerre,Bordeaux blend,Pinot Grigio,C,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Winemaking & Aging,Oak aging adds what flavors?,Citrus,Apple,Grass,Vanilla and spice,D,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Tannin,Acidity,Alcohol,Color,B,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 1,Tasting & Sensory,Legs on glass show?,Tannin,Alcohol/sugar content,Acidity,Color,B,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 1,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Sauvignon Blanc,Pinot Gris,Viognier,Chardonnay,D,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 1,Wine Law & Labels,DOCG stands for?,Denominazione Classica,Origine Controllata Garantita,Origine Protetta,Denominazione di Origine Controllata e Garantita,D,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Acidity,Color,Tannin,Alcohol,A,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Sancerre,Moscato,Pinot Grigio,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Skins,Dead yeast cells,Pips,Stems,B,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Food Pairing,Oysters call for?,Amarone,Cabernet,Champagne or Muscadet,Syrah,C,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Pinot Grigio,Moscato,Bordeaux blend,Sancerre,C,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,CO2 injection,Yeast addition only,Secondary fermentation,D,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Grapes & Styles,Which grape is the backbone of Chianti?,Dolcetto,Barbera,Sangiovese,Nebbiolo,C,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Dead yeast cells,Stems,Pips,Skins,A,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Sparkling & Fortified,Port wine originates from?,France,Spain,Italy,Portugal,D,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Service & Storage,Champagne should be served at?,20°C,10°C,16°C,7°C (45°F),D,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Drying on gums,Oily,Acidic,Sweet,A,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Regions & Appellations,Barolo DOCG is from which Italian region?,Piedmont,Tuscany,Veneto,Lombardy,A,Piedmont is correct because it best represents the topic of regions & appellations.
+Somm 1,Wine Law & Labels,DOCG stands for?,Origine Controllata Garantita,Denominazione di Origine Controllata e Garantita,Denominazione Classica,Origine Protetta,B,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 1,Tasting & Sensory,Legs on glass show?,Color,Acidity,Alcohol/sugar content,Tannin,C,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Skins,Dead yeast cells,Stems,Pips,B,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Regions & Appellations,In which country is Rioja located?,Portugal,Spain,Italy,France,B,Spain is correct because it best represents the topic of regions & appellations.
+Somm 1,Sparkling & Fortified,Port wine originates from?,France,Portugal,Italy,Spain,B,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Regions & Appellations,In which country is Rioja located?,Portugal,Italy,Spain,France,C,Spain is correct because it best represents the topic of regions & appellations.
+Somm 1,Wine Law & Labels,DOCG stands for?,Denominazione Classica,Origine Protetta,Origine Controllata Garantita,Denominazione di Origine Controllata e Garantita,D,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 1,Tasting & Sensory,High acidity gives?,Freshness and crispness,Sweetness,Bitterness,Softness,A,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 1,Regions & Appellations,In which country is Rioja located?,Italy,Spain,Portugal,France,B,Spain is correct because it best represents the topic of regions & appellations.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Dead yeast cells,Pips,Stems,Skins,A,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Food Pairing,Oysters call for?,Cabernet,Champagne or Muscadet,Amarone,Syrah,B,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 1,Sparkling & Fortified,Sherry is fortified with?,Whiskey,Vodka,Brandy,Rum,C,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Service & Storage,Ideal storage temperature for wine?,0°C,5°C,12-14°C (55°F),22°C,C,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Wine Law & Labels,Grand Cru in Burgundy means?,Top vineyard classification,Regional blend,Village wine,Entry level,A,Top vineyard classification is correct because it best represents the topic of wine law & labels.
+Somm 1,Grapes & Styles,Which grape is the backbone of Chianti?,Sangiovese,Dolcetto,Nebbiolo,Barbera,A,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 1,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,CO2 injection,Yeast addition only,Secondary fermentation,D,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Service & Storage,Champagne should be served at?,7°C (45°F),20°C,16°C,10°C,A,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Grapes & Styles,"A bold, tannic red from Argentina is likely made from?",Malbec,Cabernet Franc,Tempranillo,Syrah,A,Malbec is correct because it best represents the topic of grapes & styles.
+Somm 1,Service & Storage,Ideal storage temperature for wine?,22°C,0°C,5°C,12-14°C (55°F),D,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Pinot Grigio,Moscato,Bordeaux blend,Sancerre,C,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Winemaking & Aging,'Sur lie' aging means aging on?,Pips,Stems,Skins,Dead yeast cells,D,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Drying on gums,Acidic,Oily,Sweet,A,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Sparkling & Fortified,Port wine originates from?,Spain,France,Portugal,Italy,C,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Sparkling & Fortified,Champagne gets bubbles from?,CO2 injection,Yeast addition only,Secondary fermentation,Still fermentation,C,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Tasting & Sensory,High acidity gives?,Freshness and crispness,Bitterness,Softness,Sweetness,A,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 1,Service & Storage,"When decanting an old wine, the goal is?",Remove sediment,Add bubbles,Add oxygen,Warm wine,A,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 1,Sparkling & Fortified,Sherry is fortified with?,Brandy,Vodka,Whiskey,Rum,A,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Sancerre,Bordeaux blend,Moscato,Pinot Grigio,B,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Winemaking & Aging,Oak aging adds what flavors?,Grass,Vanilla and spice,Citrus,Apple,B,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Sweet,Drying on gums,Acidic,Oily,B,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Service & Storage,Champagne should be served at?,16°C,7°C (45°F),10°C,20°C,B,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Acidity,Color,Alcohol,Tannin,A,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 1,Service & Storage,"When decanting an old wine, the goal is?",Add oxygen,Warm wine,Add bubbles,Remove sediment,D,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 1,Service & Storage,"When decanting an old wine, the goal is?",Add bubbles,Add oxygen,Warm wine,Remove sediment,D,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 1,Winemaking & Aging,Oak aging adds what flavors?,Citrus,Grass,Vanilla and spice,Apple,C,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 1,Service & Storage,Ideal storage temperature for wine?,5°C,0°C,12-14°C (55°F),22°C,C,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Sparkling & Fortified,Sherry is fortified with?,Vodka,Whiskey,Brandy,Rum,C,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Wine Law & Labels,DOCG stands for?,Origine Controllata Garantita,Origine Protetta,Denominazione di Origine Controllata e Garantita,Denominazione Classica,C,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 1,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Sauvignon Blanc,Viognier,Chardonnay,Pinot Gris,C,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 1,Grapes & Styles,"A bold, tannic red from Argentina is likely made from?",Tempranillo,Malbec,Syrah,Cabernet Franc,B,Malbec is correct because it best represents the topic of grapes & styles.
+Somm 1,Sparkling & Fortified,Champagne gets bubbles from?,Yeast addition only,Secondary fermentation,Still fermentation,CO2 injection,B,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Grapes & Styles,Which grape is the backbone of Chianti?,Barbera,Nebbiolo,Dolcetto,Sangiovese,D,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 1,Food Pairing,Spicy Thai curry pairs well with?,Barbera,Cabernet Sauvignon,Malbec,Off-dry Riesling,D,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 1,Food Pairing,Oysters call for?,Amarone,Champagne or Muscadet,Syrah,Cabernet,B,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Pinot Grigio,Sancerre,Bordeaux blend,Moscato,C,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Regions & Appellations,In which country is Rioja located?,France,Italy,Portugal,Spain,D,Spain is correct because it best represents the topic of regions & appellations.
+Somm 1,Sparkling & Fortified,Port wine originates from?,Portugal,Spain,France,Italy,A,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 1,Tasting & Sensory,High acidity gives?,Sweetness,Bitterness,Freshness and crispness,Softness,C,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 1,Regions & Appellations,Napa Valley is best known for which grape?,Merlot,Pinot Noir,Zinfandel,Cabernet Sauvignon,D,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Sancerre,Moscato,Bordeaux blend,Pinot Grigio,C,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Tasting & Sensory,A 'tannic' wine feels?,Sweet,Acidic,Oily,Drying on gums,D,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 1,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Viognier,Pinot Gris,Chardonnay,Sauvignon Blanc,C,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 1,Tasting & Sensory,Legs on glass show?,Color,Acidity,Alcohol/sugar content,Tannin,C,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 1,Wine Law & Labels,'Estate Bottled' means?,Organic only,Bulk blend,Grown and bottled on property,Imported,C,Grown and bottled on property is correct because it best represents the topic of wine law & labels.
+Somm 1,Service & Storage,Ideal storage temperature for wine?,12-14°C (55°F),22°C,0°C,5°C,A,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 1,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Chardonnay,Pinot Gris,Viognier,Sauvignon Blanc,A,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 1,Winemaking & Aging,Oak aging adds what flavors?,Citrus,Grass,Vanilla and spice,Apple,C,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 1,Food Pairing,Roast lamb pairs best with?,Sancerre,Moscato,Pinot Grigio,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 1,Winemaking & Aging,Malolactic fermentation mainly affects what?,Color,Acidity,Alcohol,Tannin,B,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 2,Winemaking & Aging,Oak aging adds what flavors?,Vanilla and spice,Apple,Grass,Citrus,A,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Nebbiolo,Sangiovese,Barbera,Dolcetto,B,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Rum,Vodka,Whiskey,Brandy,D,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Wine Law & Labels,Grand Cru in Burgundy means?,Top vineyard classification,Regional blend,Village wine,Entry level,A,Top vineyard classification is correct because it best represents the topic of wine law & labels.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Whiskey,Brandy,Vodka,Rum,B,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,CO2 injection,Yeast addition only,Secondary fermentation,Still fermentation,C,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Pinot Gris,Chardonnay,Viognier,Sauvignon Blanc,B,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Dolcetto,Nebbiolo,Barbera,Sangiovese,D,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Wine Law & Labels,Grand Cru in Burgundy means?,Top vineyard classification,Village wine,Entry level,Regional blend,A,Top vineyard classification is correct because it best represents the topic of wine law & labels.
+Somm 2,Wine Law & Labels,DOCG stands for?,Origine Controllata Garantita,Denominazione Classica,Origine Protetta,Denominazione di Origine Controllata e Garantita,D,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 2,Wine Law & Labels,'Estate Bottled' means?,Organic only,Grown and bottled on property,Imported,Bulk blend,B,Grown and bottled on property is correct because it best represents the topic of wine law & labels.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Remove sediment,Add bubbles,Add oxygen,Warm wine,A,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Food Pairing,Spicy Thai curry pairs well with?,Barbera,Malbec,Off-dry Riesling,Cabernet Sauvignon,C,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,CO2 injection,Secondary fermentation,Yeast addition only,C,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Food Pairing,Spicy Thai curry pairs well with?,Malbec,Cabernet Sauvignon,Off-dry Riesling,Barbera,C,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 2,Food Pairing,Spicy Thai curry pairs well with?,Barbera,Off-dry Riesling,Malbec,Cabernet Sauvignon,B,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 2,Sparkling & Fortified,Port wine originates from?,France,Italy,Portugal,Spain,C,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Food Pairing,Oysters call for?,Champagne or Muscadet,Syrah,Amarone,Cabernet,A,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 2,Winemaking & Aging,Malolactic fermentation mainly affects what?,Acidity,Tannin,Alcohol,Color,A,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 2,Tasting & Sensory,Legs on glass show?,Acidity,Tannin,Alcohol/sugar content,Color,C,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Barbera,Nebbiolo,Sangiovese,Dolcetto,C,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Food Pairing,Roast lamb pairs best with?,Sancerre,Pinot Grigio,Moscato,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 2,Service & Storage,Champagne should be served at?,16°C,20°C,10°C,7°C (45°F),D,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 2,Tasting & Sensory,A 'tannic' wine feels?,Oily,Acidic,Drying on gums,Sweet,C,Drying on gums is correct because it best represents the topic of tasting & sensory.
+Somm 2,Wine Law & Labels,DOCG stands for?,Denominazione Classica,Denominazione di Origine Controllata e Garantita,Origine Protetta,Origine Controllata Garantita,B,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Secondary fermentation,Yeast addition only,Still fermentation,CO2 injection,A,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Sparkling & Fortified,Port wine originates from?,Portugal,Italy,Spain,France,A,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Regions & Appellations,Napa Valley is best known for which grape?,Cabernet Sauvignon,Merlot,Pinot Noir,Zinfandel,A,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 2,Food Pairing,Roast lamb pairs best with?,Moscato,Pinot Grigio,Sancerre,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Warm wine,Remove sediment,Add bubbles,Add oxygen,B,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,CO2 injection,Secondary fermentation,Yeast addition only,C,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Pinot Gris,Viognier,Chardonnay,Sauvignon Blanc,C,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 2,Tasting & Sensory,High acidity gives?,Freshness and crispness,Softness,Bitterness,Sweetness,A,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 2,Food Pairing,Roast lamb pairs best with?,Pinot Grigio,Sancerre,Moscato,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 2,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Chardonnay,Pinot Gris,Viognier,Sauvignon Blanc,A,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 2,Service & Storage,Champagne should be served at?,7°C (45°F),16°C,20°C,10°C,A,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 2,Service & Storage,Ideal storage temperature for wine?,5°C,12-14°C (55°F),0°C,22°C,B,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 2,Food Pairing,Spicy Thai curry pairs well with?,Off-dry Riesling,Malbec,Cabernet Sauvignon,Barbera,A,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 2,Winemaking & Aging,Oak aging adds what flavors?,Citrus,Grass,Apple,Vanilla and spice,D,Vanilla and spice is correct because it best represents the topic of winemaking & aging.
+Somm 2,Food Pairing,Spicy Thai curry pairs well with?,Malbec,Off-dry Riesling,Cabernet Sauvignon,Barbera,B,Off-dry Riesling is correct because it best represents the topic of food pairing.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Nebbiolo,Sangiovese,Dolcetto,Barbera,B,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Add oxygen,Remove sediment,Add bubbles,Warm wine,B,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Food Pairing,Oysters call for?,Champagne or Muscadet,Cabernet,Amarone,Syrah,A,Champagne or Muscadet is correct because it best represents the topic of food pairing.
+Somm 2,Tasting & Sensory,Legs on glass show?,Alcohol/sugar content,Tannin,Color,Acidity,A,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Barbera,Sangiovese,Dolcetto,Nebbiolo,B,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Tasting & Sensory,Legs on glass show?,Color,Alcohol/sugar content,Tannin,Acidity,B,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Winemaking & Aging,'Sur lie' aging means aging on?,Stems,Dead yeast cells,Pips,Skins,B,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 2,Regions & Appellations,Barolo DOCG is from which Italian region?,Veneto,Tuscany,Lombardy,Piedmont,D,Piedmont is correct because it best represents the topic of regions & appellations.
+Somm 2,Regions & Appellations,Napa Valley is best known for which grape?,Merlot,Pinot Noir,Cabernet Sauvignon,Zinfandel,C,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,CO2 injection,Yeast addition only,Still fermentation,Secondary fermentation,D,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,Secondary fermentation,Yeast addition only,CO2 injection,B,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Wine Law & Labels,Grand Cru in Burgundy means?,Regional blend,Top vineyard classification,Entry level,Village wine,B,Top vineyard classification is correct because it best represents the topic of wine law & labels.
+Somm 2,Winemaking & Aging,'Sur lie' aging means aging on?,Stems,Pips,Skins,Dead yeast cells,D,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 2,Wine Law & Labels,DOCG stands for?,Denominazione di Origine Controllata e Garantita,Denominazione Classica,Origine Controllata Garantita,Origine Protetta,A,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Yeast addition only,Still fermentation,Secondary fermentation,CO2 injection,C,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Winemaking & Aging,Malolactic fermentation mainly affects what?,Color,Acidity,Tannin,Alcohol,B,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 2,Service & Storage,Ideal storage temperature for wine?,0°C,22°C,12-14°C (55°F),5°C,C,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 2,Regions & Appellations,Napa Valley is best known for which grape?,Cabernet Sauvignon,Pinot Noir,Zinfandel,Merlot,A,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 2,Wine Law & Labels,DOCG stands for?,Denominazione di Origine Controllata e Garantita,Origine Protetta,Origine Controllata Garantita,Denominazione Classica,A,Denominazione di Origine Controllata e Garantita is correct because it best represents the topic of wine law & labels.
+Somm 2,Tasting & Sensory,Legs on glass show?,Alcohol/sugar content,Tannin,Acidity,Color,A,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Grapes & Styles,"A bold, tannic red from Argentina is likely made from?",Syrah,Cabernet Franc,Tempranillo,Malbec,D,Malbec is correct because it best represents the topic of grapes & styles.
+Somm 2,Service & Storage,Ideal storage temperature for wine?,22°C,12-14°C (55°F),5°C,0°C,B,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Rum,Whiskey,Brandy,Vodka,C,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Warm wine,Add oxygen,Add bubbles,Remove sediment,D,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Service & Storage,Ideal storage temperature for wine?,12-14°C (55°F),22°C,0°C,5°C,A,12-14°C (55°F) is correct because it best represents the topic of service & storage.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Secondary fermentation,Yeast addition only,CO2 injection,Still fermentation,A,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Food Pairing,Roast lamb pairs best with?,Pinot Grigio,Sancerre,Moscato,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Rum,Whiskey,Vodka,Brandy,D,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Wine Law & Labels,'Estate Bottled' means?,Imported,Organic only,Bulk blend,Grown and bottled on property,D,Grown and bottled on property is correct because it best represents the topic of wine law & labels.
+Somm 2,Winemaking & Aging,'Sur lie' aging means aging on?,Skins,Pips,Dead yeast cells,Stems,C,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Remove sediment,Add oxygen,Add bubbles,Warm wine,A,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Regions & Appellations,Barolo DOCG is from which Italian region?,Tuscany,Piedmont,Lombardy,Veneto,B,Piedmont is correct because it best represents the topic of regions & appellations.
+Somm 2,Regions & Appellations,In which country is Rioja located?,France,Portugal,Spain,Italy,C,Spain is correct because it best represents the topic of regions & appellations.
+Somm 2,Winemaking & Aging,Malolactic fermentation mainly affects what?,Tannin,Alcohol,Color,Acidity,D,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 2,Service & Storage,"When decanting an old wine, the goal is?",Add bubbles,Warm wine,Add oxygen,Remove sediment,D,Remove sediment is correct because it best represents the topic of service & storage.
+Somm 2,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Chardonnay,Sauvignon Blanc,Pinot Gris,Viognier,A,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Vodka,Rum,Whiskey,Brandy,D,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Tasting & Sensory,Legs on glass show?,Alcohol/sugar content,Color,Acidity,Tannin,A,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Sparkling & Fortified,Port wine originates from?,France,Italy,Portugal,Spain,C,Portugal is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Barbera,Dolcetto,Nebbiolo,Sangiovese,D,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Regions & Appellations,Napa Valley is best known for which grape?,Pinot Noir,Cabernet Sauvignon,Merlot,Zinfandel,B,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 2,Regions & Appellations,In which country is Rioja located?,Spain,Italy,France,Portugal,A,Spain is correct because it best represents the topic of regions & appellations.
+Somm 2,Food Pairing,Roast lamb pairs best with?,Moscato,Sancerre,Pinot Grigio,Bordeaux blend,D,Bordeaux blend is correct because it best represents the topic of food pairing.
+Somm 2,Sparkling & Fortified,Champagne gets bubbles from?,Still fermentation,Secondary fermentation,CO2 injection,Yeast addition only,B,Secondary fermentation is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Regions & Appellations,Barolo DOCG is from which Italian region?,Piedmont,Veneto,Tuscany,Lombardy,A,Piedmont is correct because it best represents the topic of regions & appellations.
+Somm 2,Tasting & Sensory,Legs on glass show?,Tannin,Color,Alcohol/sugar content,Acidity,C,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Tasting & Sensory,Legs on glass show?,Alcohol/sugar content,Acidity,Color,Tannin,A,Alcohol/sugar content is correct because it best represents the topic of tasting & sensory.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Whiskey,Vodka,Rum,Brandy,D,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Winemaking & Aging,Malolactic fermentation mainly affects what?,Alcohol,Color,Acidity,Tannin,C,Acidity is correct because it best represents the topic of winemaking & aging.
+Somm 2,Grapes & Styles,"When someone calls a wine 'buttery', which grape might it be?",Viognier,Chardonnay,Sauvignon Blanc,Pinot Gris,B,Chardonnay is correct because it best represents the topic of grapes & styles.
+Somm 2,Tasting & Sensory,High acidity gives?,Softness,Sweetness,Bitterness,Freshness and crispness,D,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 2,Grapes & Styles,Which grape is the backbone of Chianti?,Dolcetto,Sangiovese,Nebbiolo,Barbera,B,Sangiovese is correct because it best represents the topic of grapes & styles.
+Somm 2,Regions & Appellations,In which country is Rioja located?,Spain,France,Portugal,Italy,A,Spain is correct because it best represents the topic of regions & appellations.
+Somm 2,Service & Storage,Champagne should be served at?,7°C (45°F),10°C,16°C,20°C,A,7°C (45°F) is correct because it best represents the topic of service & storage.
+Somm 2,Regions & Appellations,Napa Valley is best known for which grape?,Merlot,Zinfandel,Cabernet Sauvignon,Pinot Noir,C,Cabernet Sauvignon is correct because it best represents the topic of regions & appellations.
+Somm 2,Winemaking & Aging,'Sur lie' aging means aging on?,Pips,Stems,Skins,Dead yeast cells,D,Dead yeast cells is correct because it best represents the topic of winemaking & aging.
+Somm 2,Tasting & Sensory,High acidity gives?,Sweetness,Bitterness,Softness,Freshness and crispness,D,Freshness and crispness is correct because it best represents the topic of tasting & sensory.
+Somm 2,Grapes & Styles,"A bold, tannic red from Argentina is likely made from?",Tempranillo,Cabernet Franc,Syrah,Malbec,D,Malbec is correct because it best represents the topic of grapes & styles.
+Somm 2,Sparkling & Fortified,Sherry is fortified with?,Vodka,Whiskey,Brandy,Rum,C,Brandy is correct because it best represents the topic of sparkling & fortified.
+Somm 2,Tasting & Sensory,A 'tannic' wine feels?,Oily,Acidic,Drying on gums,Sweet,C,Drying on gums is correct because it best represents the topic of tasting & sensory.

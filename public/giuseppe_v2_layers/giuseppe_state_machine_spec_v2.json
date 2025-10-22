@@ -1,0 +1,121 @@
+{
+  "artboard": "Giuseppe",
+  "state_machine": "AvatarState",
+  "inputs": [
+    {
+      "name": "blink",
+      "type": "Trigger"
+    },
+    {
+      "name": "isSpeaking",
+      "type": "Boolean"
+    },
+    {
+      "name": "viseme",
+      "type": "Number",
+      "range": [
+        0,
+        6
+      ],
+      "map": {
+        "0": "rest",
+        "1": "AE",
+        "2": "OU",
+        "3": "FV",
+        "4": "L",
+        "5": "MBP",
+        "6": "smile"
+      }
+    },
+    {
+      "name": "lookX",
+      "type": "Number",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0.5
+    },
+    {
+      "name": "lookY",
+      "type": "Number",
+      "range": [
+        0,
+        1
+      ],
+      "default": 0.5
+    },
+    {
+      "name": "idleIntensity",
+      "type": "Number",
+      "range": [
+        0,
+        1
+      ],
+      "default": 1.0
+    },
+    {
+      "name": "mood",
+      "type": "Number",
+      "range": [
+        0,
+        2
+      ],
+      "map": {
+        "0": "Neutral",
+        "1": "Happy",
+        "2": "Thinking"
+      }
+    }
+  ],
+  "timelines": [
+    {
+      "name": "IdleLoop",
+      "loop": true,
+      "duration_sec": 3.0,
+      "notes": "Head/torso micro-rotation \u00b11.2\u00b0, Y bob \u00b13\u20134px; scale weight by idleIntensity"
+    },
+    {
+      "name": "Blink",
+      "one_shot": true,
+      "duration_sec": 0.18,
+      "notes": "Opacity on eyes_closed or animate lid layers"
+    },
+    {
+      "name": "TalkDrive",
+      "loop": true,
+      "duration_sec": 0.6,
+      "notes": "Subtle jaw/cheek bounce while isSpeaking=true"
+    },
+    {
+      "name": "HeadLeft",
+      "loop": false,
+      "duration_sec": 0.1,
+      "notes": "Pose for Blend 1D (lookX=0)"
+    },
+    {
+      "name": "HeadRight",
+      "loop": false,
+      "duration_sec": 0.1,
+      "notes": "Pose for Blend 1D (lookX=1)"
+    },
+    {
+      "name": "HeadUp",
+      "loop": false,
+      "duration_sec": 0.1,
+      "notes": "Pose for Blend 1D (lookY=1)"
+    },
+    {
+      "name": "HeadDown",
+      "loop": false,
+      "duration_sec": 0.1,
+      "notes": "Pose for Blend 1D (lookY=0)"
+    },
+    {
+      "name": "Smile",
+      "loop": false,
+      "duration_sec": 0.2,
+      "notes": "Blend-in for mood=1"
+    }
+  ]
+}

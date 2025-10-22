@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { Menu, X, Wine, Settings, Shield, Plus, User, Info } from 'lucide-react'
+import { Menu, X, Wine, Settings, Shield, Plus, User, Info, BookOpen, Trophy } from 'lucide-react'
 import Link from 'next/link'
 
 interface HamburgerMenuProps {
@@ -88,6 +88,22 @@ export function HamburgerMenu({ user }: HamburgerMenuProps) {
                 <div className="flex items-center px-4 py-3 text-amber-700 hover:bg-amber-50 cursor-pointer">
                   <Wine className="w-4 h-4 mr-3" />
                   <span className="text-sm font-medium">My Cellar</span>
+                </div>
+              </Link>
+
+              {/* Learn Wine Link */}
+              <Link href="/learn" onClick={closeMenu}>
+                <div className="flex items-center px-4 py-3 text-amber-700 hover:bg-amber-50 cursor-pointer">
+                  <BookOpen className="w-4 h-4 mr-3" />
+                  <span className="text-sm font-medium">Learn Wine!</span>
+                </div>
+              </Link>
+
+              {/* My Awards Link */}
+              <Link href="/learn/mastery" onClick={closeMenu}>
+                <div className="flex items-center px-4 py-3 text-amber-700 hover:bg-amber-50 cursor-pointer">
+                  <Trophy className="w-4 h-4 mr-3" />
+                  <span className="text-sm font-medium">My Awards</span>
                 </div>
               </Link>
 
