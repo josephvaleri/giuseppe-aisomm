@@ -31,6 +31,8 @@ export default function CellarPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'card'>('grid')
   const [sortBy, setSortBy] = useState<string>('wine_name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   
   const supabase = createClient()
   const router = useRouter()
@@ -38,6 +40,11 @@ export default function CellarPage() {
   useEffect(() => {
     loadCellarItems()
   }, [])
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterStatus, sortBy, sortOrder])
 
   const loadCellarItems = async () => {
     try {
@@ -127,6 +134,12 @@ export default function CellarPage() {
       }
     })
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedItems.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedItems = filteredAndSortedItems.slice(startIndex, endIndex)
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'stored': return 'bg-green-100 text-green-800'
@@ -160,8 +173,14 @@ export default function CellarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-[url('/background_05.jpg')] bg-cover bg-center bg-no-repeat relative" style={{ minHeight: 'calc(100vh - 200px)' }}>
+      {/* 40% blur effect */}
+      <div className="absolute inset-0 backdrop-blur-[6px]"></div>
+      {/* Very subtle overlay to help with rendering */}
+      <div className="absolute inset-0 bg-white/5"></div>
+      
+      {/* Content with proper layering */}
+      <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -252,7 +271,7 @@ export default function CellarPage() {
               </Button>
             </div>
             
-            <div className="flex bg-white/80 backdrop-blur-sm border border-amber-200 rounded-lg p-1">
+            <div className="flex bg-white/15  border border-amber-200 rounded-lg p-1">
               <Button
                 onClick={() => setViewMode('card')}
                 variant={viewMode === 'card' ? 'default' : 'ghost'}
@@ -288,7 +307,7 @@ export default function CellarPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4 bg-white/80 backdrop-blur-sm border-amber-200">
+            <Card className="p-4 bg-white  border-amber-200">
               <div className="text-center">
                 <div className="text-2xl font-bold text-amber-900">{filteredAndSortedItems.length}</div>
                 <div className="text-sm text-amber-600">
@@ -296,7 +315,7 @@ export default function CellarPage() {
                 </div>
               </div>
             </Card>
-            <Card className="p-4 bg-white/80 backdrop-blur-sm border-amber-200">
+            <Card className="p-4 bg-white  border-amber-200">
               <div className="text-center">
                 <div className="text-2xl font-bold text-amber-900">
                   {filteredAndSortedItems.filter(item => item.status === 'stored').length}
@@ -304,7 +323,7 @@ export default function CellarPage() {
                 <div className="text-sm text-amber-600">Stored</div>
               </div>
             </Card>
-            <Card className="p-4 bg-white/80 backdrop-blur-sm border-amber-200">
+            <Card className="p-4 bg-white  border-amber-200">
               <div className="text-center">
                 <div className="text-2xl font-bold text-amber-900">
                   {filteredAndSortedItems.filter(item => item.status === 'drank').length}
@@ -312,7 +331,7 @@ export default function CellarPage() {
                 <div className="text-sm text-amber-600">Drank</div>
               </div>
             </Card>
-            <Card className="p-4 bg-white/80 backdrop-blur-sm border-amber-200">
+            <Card className="p-4 bg-white  border-amber-200">
               <div className="text-center">
                 <div className="text-2xl font-bold text-amber-900">
                   ${filteredAndSortedItems.reduce((sum, item) => sum + (item.value || 0), 0).toFixed(2)}
@@ -326,7 +345,7 @@ export default function CellarPage() {
           {viewMode === 'card' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
-                {filteredAndSortedItems.map((item) => (
+                {paginatedItems.map((item) => (
                   <motion.div
                     key={item.bottle_id}
                     initial={{ opacity: 0, y: 20 }}
@@ -335,7 +354,7 @@ export default function CellarPage() {
                     transition={{ duration: 0.3 }}
                   >
                     <Card 
-                      className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 hover:shadow-lg transition-shadow cursor-pointer"
+                      className="p-6 bg-white/15  border-amber-200 hover:shadow-lg transition-shadow cursor-pointer"
                       onClick={() => router.push(`/wines/${item.wine_id}`)}
                     >
                       <div className="space-y-4">
@@ -548,7 +567,7 @@ export default function CellarPage() {
             </div>
           ) : (
             /* Table View */
-            <div className="bg-white/80 backdrop-blur-sm border border-amber-200 rounded-lg overflow-hidden">
+            <div className="bg-white/80 border border-amber-200 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-amber-50 border-b border-amber-200">
@@ -565,7 +584,7 @@ export default function CellarPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-200">
-                    {filteredAndSortedItems.map((item) => (
+                    {paginatedItems.map((item) => (
                       <motion.tr
                         key={item.bottle_id}
                         initial={{ opacity: 0 }}
@@ -716,9 +735,41 @@ export default function CellarPage() {
             </div>
           )}
 
+          {/* Pagination Controls */}
+          {filteredAndSortedItems.length > itemsPerPage && (
+            <div className="flex justify-center items-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="bg-white border-amber-200"
+              >
+                Previous
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-black">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <span className="text-black">
+                  ({filteredAndSortedItems.length} total wines)
+                </span>
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="bg-white border-amber-200"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+
           {/* Empty State */}
           {filteredAndSortedItems.length === 0 && !isLoading && (
-            <Card className="p-12 bg-white/80 backdrop-blur-sm border-amber-200 text-center">
+            <Card className="p-12 bg-white/15  border-amber-200 text-center">
               <Wine className="w-16 h-16 text-amber-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-amber-900 mb-2">
                 {searchTerm || filterStatus !== 'all' ? 'No wines found' : 'Your cellar is empty'}

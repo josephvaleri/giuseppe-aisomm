@@ -743,7 +743,13 @@ export function BottleSelectorModal({ isOpen, onClose, onBottleSelected }: Bottl
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-[url('/background_06.jpg')] bg-cover bg-center bg-no-repeat relative rounded-lg overflow-hidden">
+        {/* 50% fade overlay */}
+        <div className="absolute inset-0 bg-white/50"></div>
+        
+        {/* Content with proper layering */}
+        <div className="relative z-10 w-full h-full overflow-y-auto">
+          <Card className="w-full h-full bg-transparent border-0 shadow-none">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-2xl font-bold text-amber-900">
             Select a Bottle
@@ -979,7 +985,9 @@ export function BottleSelectorModal({ isOpen, onClose, onBottleSelected }: Bottl
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+      </div>
 
       {/* Confirm Remove Modal */}
       {showConfirmRemove && selectedBottle && (

@@ -4,10 +4,17 @@ import { motion } from 'framer-motion';
 interface WineGlassProgressProps {
   total: number;
   correct: number;
+  current: number;
 }
 
-export default function WineGlassProgress({ total, correct }: WineGlassProgressProps) {
-  const percentage = Math.min(100, (correct / total) * 100);
+export default function WineGlassProgress({ total, correct, current }: WineGlassProgressProps) {
+  // Calculate progress as percentage of questions completed
+  // current is the current question index (0-based)
+  // Progress should be: 0% at start, 20% after Q1, 40% after Q2, etc.
+  // For the final question (current = total - 1), show 100% progress
+  const isFinalQuestion = current === total - 1;
+  const questionsCompleted = isFinalQuestion ? total : current + 1;
+  const percentage = Math.min(100, (questionsCompleted / total) * 100);
   
   return (
     <div className="w-full max-w-md mx-auto">

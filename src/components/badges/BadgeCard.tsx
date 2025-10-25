@@ -24,7 +24,7 @@ export default function BadgeCard({
   return (
     <div
       className={cn(
-        "group rounded-2xl border bg-card p-4 shadow-sm transition hover:shadow-md relative",
+        "group rounded-2xl border bg-white/90 backdrop-blur-sm p-4 shadow-sm transition hover:shadow-md relative",
         locked && "opacity-80"
       )}
     >

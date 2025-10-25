@@ -17,3 +17,4 @@ export function RatingDisplay({ rating }: RatingDisplayProps) {
     />
   );
 }
+

@@ -177,7 +177,7 @@ export function LabelScannerCard() {
 
   return (
     <>
-      <Card className="p-4 bg-white/80 backdrop-blur-sm border-amber-200">
+      <Card className="p-4 bg-white/70 backdrop-blur-sm border-amber-200">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-amber-900 text-sm">Label Scanner</h3>

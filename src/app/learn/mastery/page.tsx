@@ -33,8 +33,12 @@ export default async function MasteryPage() {
   const tiered = (defs || []).filter((d: any) => d.is_tiered);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-amber-50/30 to-orange-50/20">
-      <div className="container mx-auto px-6 py-12 max-w-6xl">
+    <main className="min-h-screen bg-[url('/background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
+      {/* 40% blur effect */}
+      <div className="absolute inset-0 backdrop-blur-[4px]"></div>
+      
+      {/* Content with proper layering */}
+      <div className="relative z-10 container mx-auto px-6 py-12 max-w-6xl">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-amber-900 mb-6">My Awards</h1>
           <p className="text-muted-foreground text-xl max-w-2xl mx-auto">

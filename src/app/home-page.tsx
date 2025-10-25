@@ -1,24 +1,19 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Mic, MicOff, Send, ThumbsUp, ThumbsDown, LogIn, UserPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { AvatarLayered } from '@/components/AvatarLayered'
-import { useBlink } from '@/hooks/useBlink'
-import { useSpeakingMic } from '@/hooks/useSpeakingMic'
 import GrapeDetail from '@/components/GrapeDetail'
 import GrapeLinkedText from '@/components/GrapeLinkedText'
-import { detectGrapeNames, getAllGrapeVarieties, createGrapeLinks, GrapeMatch } from '@/lib/grape-linking'
+import { getAllGrapeVarieties } from '@/lib/grape-linking'
 import { useRouter } from 'next/navigation'
 import { LabelScannerCard } from '@/components/LabelScannerCard'
 
-type AvatarState = 'WAITING' | 'ANSWERING' | 'ERROR'
 
 interface Answer {
   id: string
@@ -36,14 +31,10 @@ declare global {
 
 export default function HomePageContent() {
   const [question, setQuestion] = useState('')
-  const [avatarState, setAvatarState] = useState<AvatarState>('WAITING')
   const [answers, setAnswers] = useState<Answer[]>([])
   const [isListening, setIsListening] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<Record<string, boolean | null>>({})
-  const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({})
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [imageError, setImageError] = useState(false)
   const [grapeVarieties, setGrapeVarieties] = useState<string[]>([])
   const [selectedGrapeId, setSelectedGrapeId] = useState<number | null>(null)
   const [welcomeMessage, setWelcomeMessage] = useState<string>('')
@@ -55,13 +46,8 @@ export default function HomePageContent() {
   const supabase = createClient()
   const router = useRouter()
   
-  // Audio-reactive hooks for new avatar
-  const answering = avatarState === 'ANSWERING'
-  const blinking = useBlink({ answering }) // Uses configurable settings
-  const level = 0 // No microphone for now
 
   useEffect(() => {
-    loadAvatarUrls()
     loadGrapeVarieties()
     loadWelcomeMessage()
     checkAuth()
@@ -155,23 +141,6 @@ export default function HomePageContent() {
     }
   }, [])
 
-  const loadAvatarUrls = async () => {
-    try {
-      const avatarTypes = ['waiting', 'answering', 'error']
-      const urls: Record<string, string> = {}
-      
-      for (const type of avatarTypes) {
-        const { data } = supabase.storage
-          .from('giuseppe-avatars')
-          .getPublicUrl(`${type}.png`)
-        urls[type] = data.publicUrl
-      }
-      
-      setAvatarUrls(urls)
-    } catch (error) {
-      console.error('Error loading avatar URLs:', error)
-    }
-  }
 
   const startListening = () => {
     if (recognitionRef.current && !isListening) {
@@ -194,7 +163,6 @@ export default function HomePageContent() {
     setSelectedGrapeId(null)
     
     setIsLoading(true)
-    setAvatarState('ANSWERING')
     
     try {
       const response = await fetch('/api/ask', {
@@ -217,10 +185,8 @@ export default function HomePageContent() {
         }
         
         setAnswers(prev => [newAnswer, ...prev])
-        setAvatarState('WAITING')
         setQuestion('')
       } else {
-        setAvatarState('ERROR')
         const errorAnswer: Answer = {
           id: Date.now().toString(),
           content: data.error || 'Sorry, I encountered an error. Please try again.',
@@ -230,7 +196,6 @@ export default function HomePageContent() {
       }
     } catch (error) {
       console.error('Error asking question:', error)
-      setAvatarState('ERROR')
       const errorAnswer: Answer = {
         id: Date.now().toString(),
         content: 'Sorry, I encountered a network error. Please try again.',
@@ -278,20 +243,6 @@ export default function HomePageContent() {
     }
   }
 
-  const getAvatarImage = () => {
-    const stateKey = avatarState.toLowerCase() as keyof typeof avatarUrls
-    return avatarUrls[stateKey] || '/Giuseppe_001.png'
-  }
-
-  const handleImageLoad = () => {
-    setImageLoaded(true)
-    setImageError(false)
-  }
-
-  const handleImageError = () => {
-    setImageError(true)
-    setImageLoaded(false)
-  }
 
   // Handle grape link clicks
   const handleGrapeClick = (grapeId: number) => {
@@ -356,7 +307,7 @@ export default function HomePageContent() {
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-amber-900 mb-2">
-                Giuseppe the AISomm
+                Giuseppe AI Sommelier
               </h1>
               <p className="text-amber-700 text-lg">
                 Your personal wine expert, ready to answer any question
@@ -372,22 +323,19 @@ export default function HomePageContent() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column: Giuseppe */}
               <div className="flex flex-col space-y-6">
-                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 relative">
+                <Card className="p-6 bg-transparent border-0 relative">
                   <div className="text-center">
-                    {/* Animated Giuseppe Avatar */}
+                    {/* Static Giuseppe Avatar */}
                     <div className="relative mb-4 flex justify-center">
-                      <AvatarLayered
-                        baseSrc="/giuseppe_v3_layers/giuseppe_root/base_open.png"
-                        eyesClosedSrc="/giuseppe_v3_layers/giuseppe_root/eyes_closed.png"
-                        answering={answering}
-                        level={level}
-                        blinking={blinking}
-                        className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
+                      <img
+                        src="/img/giuseppe-avatar.png"
+                        alt="Giuseppe AI Sommelier"
+                        className="max-w-full max-h-40 w-auto h-auto object-contain rounded-lg"
                       />
                     </div>
                     
                     <Badge 
-                      variant={avatarState === 'ERROR' ? 'destructive' : 'default'}
+                      variant="default"
                       className="mb-4"
                     >
                       Ready to help
@@ -396,13 +344,44 @@ export default function HomePageContent() {
                     <p className="text-amber-800 text-sm">
                       Sign up for your free trial to start asking me questions about wine!
                     </p>
+                    
+                    {/* Ask Giuseppe Input */}
+                    <div className="mt-6 space-y-4">
+                      <Textarea
+                        placeholder={
+                          selectedGrapeId 
+                            ? "Ask a new question to return to answers, or ask about this grape..."
+                            : "Ask Giuseppe anything about wine... (e.g., 'What wine pairs with pasta?', 'Tell me about Chianti', 'How do I build a wine cellar?')"
+                        }                                                   
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        className="min-h-[120px] resize-none border-amber-300 focus:border-amber-500 bg-white/70"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSubmit()
+                          }
+                        }}
+                      />
+                      
+                      <div className="flex justify-center">
+                        <Button
+                          onClick={handleSubmit}
+                          disabled={!question.trim() || isLoading}
+                          className="bg-amber-600 hover:bg-amber-700 disabled:bg-amber-600 disabled:opacity-100 px-8"
+                        >
+                          <Send className="w-4 h-4 mr-2" />
+                          Ask Giuseppe!
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </Card>
               </div>
 
               {/* Right Column: Login/Auth */}
               <div className="flex flex-col">
-                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 h-full">
+                <Card className="p-6 bg-white/70 backdrop-blur-sm border-amber-200 h-full">
                   <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold text-amber-900 mb-2">
                       Get Started with Giuseppe
@@ -453,13 +432,17 @@ export default function HomePageContent() {
 
   // Authenticated users see the full interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[url('/background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
+      {/* 50% fade overlay */}
+      <div className="absolute inset-0 bg-white/50"></div>
+      
+      {/* Content with proper layering */}
+      <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-amber-900 mb-2">
-              Giuseppe the AISomm
+              Giuseppe AI Sommelier
             </h1>
             <p className="text-amber-700 text-lg">
               Your personal wine expert, ready to answer any question
@@ -470,41 +453,63 @@ export default function HomePageContent() {
             {/* Left Column: Giuseppe and Question Input */}
             <div className="flex flex-col space-y-6">
               {/* Giuseppe Avatar Card */}
-              <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 relative">
+              <Card className="p-6 bg-transparent border-0 relative">
                 <div className="text-center">
-                  {/* Animated Giuseppe Avatar */}
+                  {/* Static Giuseppe Avatar */}
                   <div className="relative mb-4 flex justify-center">
-                    <AvatarLayered
-                      baseSrc="/giuseppe_v3_layers/giuseppe_root/base_open.png"
-                      eyesClosedSrc="/giuseppe_v3_layers/giuseppe_root/eyes_closed.png"
-                      answering={answering}
-                      level={level}
-                      blinking={blinking}
-                      className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg shadow-lg"
+                    <img
+                      src="/img/giuseppe-avatar.png"
+                      alt="Giuseppe AI Sommelier"
+                      className="max-w-full max-h-40 w-auto h-auto object-contain rounded-lg"
                     />
                   </div>
                   
                   <Badge 
-                    variant={avatarState === 'ERROR' ? 'destructive' : 'default'}
+                    variant="default"
                     className="mb-4"
                   >
-                    {avatarState === 'WAITING' && (
-                      <button 
-                        onClick={() => router.push('/about')}
-                        className="hover:underline cursor-pointer"
-                      >
-                        Meet Giuseppe
-                      </button>
-                    )}
-                    {avatarState === 'ANSWERING' && 'Thinking...'}
-                    {avatarState === 'ERROR' && 'Oops!'}
+                    <button 
+                      onClick={() => router.push('/about')}
+                      className="hover:underline cursor-pointer"
+                    >
+                      Meet Giuseppe
+                    </button>
                   </Badge>
                   
                   <p className="text-amber-800 text-sm">
-                    {avatarState === 'WAITING' && 'Ask me anything about wine!'}
-                    {avatarState === 'ANSWERING' && 'Let me think about that...'}
-                    {avatarState === 'ERROR' && 'Something went wrong'}
+                    Ask me anything about wine!
                   </p>
+                  
+                  {/* Ask Giuseppe Input */}
+                  <div className="mt-6 space-y-4">
+                    <Textarea
+                      placeholder={
+                        selectedGrapeId 
+                          ? "Ask a new question to return to answers, or ask about this grape..."
+                          : "Ask Giuseppe anything about wine... (e.g., 'What wine pairs with pasta?', 'Tell me about Chianti', 'How do I build a wine cellar?')"
+                      }                                                   
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      className="min-h-[120px] resize-none border-amber-300 focus:border-amber-500 bg-white/70"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSubmit()
+                        }
+                      }}
+                    />
+                    
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={!question.trim() || isLoading}
+                        className="bg-amber-600 hover:bg-amber-700 disabled:bg-amber-600 disabled:opacity-100 px-8"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Ask Giuseppe!
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Voice Button - Bottom Right */}
@@ -514,45 +519,14 @@ export default function HomePageContent() {
                     variant={isListening ? 'destructive' : 'outline'}
                     size="sm"
                     disabled={isLoading}
-                    className="rounded-full w-12 h-12 p-0 shadow-lg"
+                    className="rounded-full w-12 h-12 p-0"
                   >
                     {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                   </Button>
                 </div>
               </Card>
 
-              {/* Question Input Card */}
-              <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200">
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder={
-                      selectedGrapeId 
-                        ? "Ask a new question to return to answers, or ask about this grape..."
-                        : "Ask Giuseppe anything about wine... (e.g., 'What wine pairs with pasta?', 'Tell me about Chianti', 'How do I build a wine cellar?')"
-                    }                                                   
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    className="min-h-[120px] resize-none border-amber-300 focus:border-amber-500"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSubmit()
-                      }
-                    }}
-                  />
-                  
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!question.trim() || isLoading}
-                      className="bg-amber-600 hover:bg-amber-700 px-8"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Ask Giuseppe!
-                    </Button>
-                  </div>
-                </div>
-              </Card>
+
             </div>
 
             {/* Right Column: Label Scanner + Answers or Grape Detail */}
@@ -566,7 +540,7 @@ export default function HomePageContent() {
                   onBack={handleBackFromGrape}
                 />
               ) : (
-                <Card className="p-6 bg-white/80 backdrop-blur-sm border-amber-200 h-full">
+                <Card className="p-6 bg-white/70 backdrop-blur-sm border-amber-200 h-full">
                   <div className="space-y-4">
                     {answers.length === 0 && welcomeMessage ? (
                       <motion.div

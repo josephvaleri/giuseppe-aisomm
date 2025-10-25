@@ -18,7 +18,12 @@ export default async function NotebookPage({
   const notes = await getTastingNotes(q);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-[url('/background_02.jpg')] bg-cover bg-center bg-no-repeat relative">
+      {/* 50% fade overlay */}
+      <div className="absolute inset-0 bg-white/50"></div>
+      
+      {/* Content with proper layering */}
+      <div className="relative z-10 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-amber-900">My Tasting Notebook</h1>
         <Link href="/tasting-notebook/new">
@@ -91,6 +96,7 @@ export default async function NotebookPage({
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

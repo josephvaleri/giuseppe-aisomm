@@ -35,10 +35,21 @@ export default function QuizTypeSelector() {
             transition-all duration-300 transform hover:scale-105
             min-w-[200px] text-center
           `}
-          onClick={() => router.push(`/learn/quiz?type=${quiz.id}`)}
+          onClick={() => {
+            if (quiz.id === 'pop') {
+              // Pop quiz gets questions from ALL categories
+              router.push(`/learn/quiz?type=${quiz.id}`);
+            } else {
+              // Sip & Learn needs a study area - for now, let's use a random one
+              // TODO: Add study area selector
+              const studyAreas = ['Grapes', 'Regions', 'Winemaking', 'Tasting', 'History'];
+              const randomStudyArea = studyAreas[Math.floor(Math.random() * studyAreas.length)];
+              router.push(`/learn/quiz?type=${quiz.id}&study_area=${randomStudyArea}`);
+            }
+          }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
+          transition={{ delay: 0.2 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
