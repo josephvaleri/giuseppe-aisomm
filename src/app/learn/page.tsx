@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default async function LearnPage() {
   return (
-    <main className="min-h-screen bg-[url('/background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/Background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* 60% fade overlay */}
       <div className="absolute inset-0 bg-white/60"></div>
       
