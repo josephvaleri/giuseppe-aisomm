@@ -12,9 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function NotebookPage({ 
   searchParams 
 }: { 
-  searchParams: { q?: string; min?: string; max?: string }
+  searchParams: Promise<{ q?: string; min?: string; max?: string }>
 }) {
-  const q = (searchParams.q ?? "").trim();
+  const params = await searchParams;
+  const q = (params.q ?? "").trim();
   const notes = await getTastingNotes(q);
 
   return (
