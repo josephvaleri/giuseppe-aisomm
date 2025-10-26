@@ -29,7 +29,12 @@ export default function AddWinePage() {
 
   if (mode === 'choose') {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="min-h-screen bg-[url('/background_10.png')] bg-cover bg-center bg-no-repeat relative">
+        {/* 60% fade overlay */}
+        <div className="absolute inset-0 bg-white/60"></div>
+        
+        {/* Content with proper layering */}
+        <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -86,13 +91,19 @@ export default function AddWinePage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+        </div>
+      </main>
     )
   }
 
   if (mode === 'scan') {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="min-h-screen bg-[url('/background_10.png')] bg-cover bg-center bg-no-repeat relative">
+        {/* 60% fade overlay */}
+        <div className="absolute inset-0 bg-white/60"></div>
+        
+        {/* Content with proper layering */}
+        <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -107,13 +118,19 @@ export default function AddWinePage() {
         </div>
 
         <WineScanner onScanComplete={handleScanComplete} />
-      </div>
+        </div>
+      </main>
     )
   }
 
   if (mode === 'manual') {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="min-h-screen bg-[url('/background_10.png')] bg-cover bg-center bg-no-repeat relative">
+        {/* 60% fade overlay */}
+        <div className="absolute inset-0 bg-white/60"></div>
+        
+        {/* Content with proper layering */}
+        <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -138,7 +155,8 @@ export default function AddWinePage() {
           initialData={scannedData}
           onComplete={() => router.push('/cellar')}
         />
-      </div>
+        </div>
+      </main>
     )
   }
 

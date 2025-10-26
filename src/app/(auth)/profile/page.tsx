@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AvatarUpload } from '@/components/profile/AvatarUpload'
 import { TastePreferences } from '@/components/profile/TastePreferences'
 import { useToast } from '@/components/ui/use-toast'
 import { combinedProfileSchema, ProfileData, DetailsData, TasteData } from '@/lib/zod/profile'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowLeft, Save, User, Settings, Wine } from 'lucide-react'
+import { ArrowLeft, Save, User, Settings, Wine, Mail, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProfilePageData {
@@ -29,6 +30,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState('account')
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -173,8 +175,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[url('/background_09.png')] bg-cover bg-center bg-no-repeat relative">
+      {/* 60% fade overlay */}
+      <div className="absolute inset-0 bg-white/60"></div>
+      
+      {/* Content with proper layering */}
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
@@ -191,177 +197,191 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Account Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center text-amber-900">
-                <User className="w-5 h-5 mr-2" />
-                Account Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="full_name">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    {...register('profile.full_name')}
-                    className="mt-1"
-                  />
-                  {errors.profile?.full_name && (
-                    <p className="text-red-600 text-sm mt-1">{errors.profile.full_name.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register('profile.email')}
-                    className="mt-1"
-                  />
-                  {errors.profile?.email && (
-                    <p className="text-red-600 text-sm mt-1">{errors.profile.email.message}</p>
-                  )}
-                </div>
-              </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="account">Account Information</TabsTrigger>
+              <TabsTrigger value="personal">Personal Details</TabsTrigger>
+              <TabsTrigger value="taste">Taste & Style Preferences</TabsTrigger>
+            </TabsList>
 
-              {/* Read-only account info */}
-              <div className="pt-4 border-t border-amber-200">
-                <h4 className="font-medium text-amber-900 mb-3">Account Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <Label className="text-gray-600">Role</Label>
-                    <div className="mt-1">
-                      <Badge variant="secondary">{data.profile.role}</Badge>
+            {/* Account Information Tab */}
+            <TabsContent value="account" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-amber-900">
+                    <User className="w-5 h-5 mr-2" />
+                    Account Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="full_name">Full Name</Label>
+                      <Input
+                        id="full_name"
+                        {...register('profile.full_name')}
+                        className="mt-1"
+                      />
+                      {errors.profile?.full_name && (
+                        <p className="text-red-600 text-sm mt-1">{errors.profile.full_name.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        {...register('profile.email')}
+                        className="mt-1"
+                      />
+                      {errors.profile?.email && (
+                        <p className="text-red-600 text-sm mt-1">{errors.profile.email.message}</p>
+                      )}
                     </div>
                   </div>
-                  <div>
-                    <Label className="text-gray-600">Subscription Status</Label>
-                    <div className="mt-1">
-                      <Badge variant="secondary">{data.profile.subscription_status}</Badge>
+
+                  {/* Read-only account info */}
+                  <div className="pt-4 border-t border-amber-200">
+                    <h4 className="font-medium text-amber-900 mb-3">Account Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <Label className="text-gray-600">Role</Label>
+                        <div className="mt-1">
+                          <Badge variant="secondary">{data.profile.role}</Badge>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-gray-600">Subscription Status</Label>
+                        <div className="mt-1">
+                          <Badge variant="secondary">{data.profile.subscription_status}</Badge>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-gray-600">Trial Expires</Label>
+                        <p className="mt-1 text-gray-900">
+                          {data.profile.trial_expires_at ? new Date(data.profile.trial_expires_at).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-gray-600">Member Since</Label>
+                        <p className="mt-1 text-gray-900">
+                          {new Date(data.profile.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Personal Details Tab */}
+            <TabsContent value="personal" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center text-amber-900">
+                    <Settings className="w-5 h-5 mr-2" />
+                    Personal Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Profile Photo */}
                   <div>
-                    <Label className="text-gray-600">Trial Expires</Label>
-                    <p className="mt-1 text-gray-900">
-                      {data.profile.trial_expires_at ? new Date(data.profile.trial_expires_at).toLocaleDateString() : 'N/A'}
-                    </p>
+                    <Label className="text-sm font-medium">Profile Photo</Label>
+                    <div className="mt-2">
+                      <AvatarUpload
+                        currentAvatarUrl={data.details.avatar_url}
+                        onAvatarUpdate={handleAvatarUpdate}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-gray-600">Member Since</Label>
-                    <p className="mt-1 text-gray-900">
-                      {new Date(data.profile.created_at).toLocaleDateString()}
-                    </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="preferred_name">Preferred Name</Label>
+                      <Input
+                        id="preferred_name"
+                        {...register('details.preferred_name')}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        {...register('details.phone')}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Personal Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center text-amber-900">
-                <Settings className="w-5 h-5 mr-2" />
-                Personal Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Profile Photo */}
-              <div>
-                <Label className="text-sm font-medium">Profile Photo</Label>
-                <div className="mt-2">
-                  <AvatarUpload
-                    currentAvatarUrl={data.details.avatar_url}
-                    onAvatarUpdate={handleAvatarUpdate}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="preferred_name">Preferred Name</Label>
-                  <Input
-                    id="preferred_name"
-                    {...register('details.preferred_name')}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    {...register('details.phone')}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="experience">Wine Experience</Label>
-                  <Select
-                    value={watch('details.experience')}
-                    onValueChange={(value) => setValue('details.experience', value as any)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="newbie">Newbie - Just getting started</SelectItem>
-                      <SelectItem value="casual_fan">Casual Fan - Love it but don't know it</SelectItem>
-                      <SelectItem value="appellation_aware">Appellation Aware - I know what an appellation is</SelectItem>
-                      <SelectItem value="case_pro">Case Pro - I know a bushel</SelectItem>
-                      <SelectItem value="sommelier">Sommelier - I am a Somm</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="time_zone">Time Zone</Label>
-                  <Input
-                    id="time_zone"
-                    {...register('details.time_zone')}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="people_count">People Count</Label>
-                  <Input
-                    id="people_count"
-                    type="number"
-                    min="1"
-                    {...register('details.people_count', { valueAsNumber: true })}
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="share_cellar">Share My Cellar</Label>
-                    <p className="text-sm text-gray-600">When enabled, others can search your cellar</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="experience">Wine Experience</Label>
+                      <Select
+                        value={watch('details.experience')}
+                        onValueChange={(value) => setValue('details.experience', value as any)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="newbie">Newbie - Just getting started</SelectItem>
+                          <SelectItem value="casual_fan">Casual Fan - Love it but don't know it</SelectItem>
+                          <SelectItem value="appellation_aware">Appellation Aware - I know what an appellation is</SelectItem>
+                          <SelectItem value="case_pro">Case Pro - I know a bushel</SelectItem>
+                          <SelectItem value="sommelier">Sommelier - I am a Somm</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="time_zone">Time Zone</Label>
+                      <Input
+                        id="time_zone"
+                        {...register('details.time_zone')}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    id="share_cellar"
-                    checked={watch('details.share_cellar')}
-                    onCheckedChange={(checked) => setValue('details.share_cellar', checked)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Taste Preferences */}
-          <TastePreferences
-            data={watch('taste')}
-            onChange={handleTasteChange}
-          />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="people_count">People Count</Label>
+                      <Input
+                        id="people_count"
+                        type="number"
+                        min="1"
+                        {...register('details.people_count', { valueAsNumber: true })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label htmlFor="share_cellar">Share My Cellar</Label>
+                        <p className="text-sm text-gray-600">When enabled, others can search your cellar</p>
+                      </div>
+                      <Switch
+                        id="share_cellar"
+                        checked={watch('details.share_cellar')}
+                        onCheckedChange={(checked) => setValue('details.share_cellar', checked)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Taste & Style Preferences Tab */}
+            <TabsContent value="taste" className="space-y-6">
+              <TastePreferences
+                data={watch('taste')}
+                onChange={handleTasteChange}
+              />
+            </TabsContent>
+          </Tabs>
 
           {/* Save Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-8">
             <Button
               type="submit"
               disabled={isSaving}
@@ -382,6 +402,6 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
-    </div>
+    </main>
   )
 }
