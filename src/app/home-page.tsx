@@ -627,6 +627,6 @@ export default function HomePageContent() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

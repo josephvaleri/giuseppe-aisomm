@@ -97,6 +97,6 @@ export default async function NotebookPage({
         </div>
       )}
       </div>
-    </div>
+    </main>
   );
 }
