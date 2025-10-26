@@ -9,7 +9,7 @@ export default function AboutPage() {
   const router = useRouter()
 
   return (
-    <div className="min-h-screen bg-[url('/background_04.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/background_04.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-white/60"></div>
       <div className="relative z-10 container mx-auto px-4 py-8">
@@ -214,6 +214,6 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

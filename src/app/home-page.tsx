@@ -432,7 +432,7 @@ export default function HomePageContent() {
 
   // Authenticated users see the full interface
   return (
-    <div className="min-h-screen bg-[url('/Background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* 50% fade overlay */}
       <div className="absolute inset-0 bg-white/50"></div>
       

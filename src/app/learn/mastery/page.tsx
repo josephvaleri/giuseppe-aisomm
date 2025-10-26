@@ -33,7 +33,7 @@ export default async function MasteryPage() {
   const tiered = (defs || []).filter((d: any) => d.is_tiered);
 
   return (
-    <main className="min-h-screen bg-[url('/Background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/background_03.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* 40% blur effect */}
       <div className="absolute inset-0 backdrop-blur-[4px]"></div>
       

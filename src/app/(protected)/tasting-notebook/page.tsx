@@ -18,7 +18,7 @@ export default async function NotebookPage({
   const notes = await getTastingNotes(q);
 
   return (
-    <div className="min-h-screen bg-[url('/background_02.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/background_02.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* 50% fade overlay */}
       <div className="absolute inset-0 bg-white/50"></div>
       

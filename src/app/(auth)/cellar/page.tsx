@@ -173,11 +173,9 @@ export default function CellarPage() {
   }
 
   return (
-    <div className="bg-[url('/background_05.jpg')] bg-cover bg-center bg-no-repeat relative" style={{ minHeight: 'calc(100vh - 200px)' }}>
-      {/* 40% blur effect */}
-      <div className="absolute inset-0 backdrop-blur-[6px]"></div>
-      {/* Very subtle overlay to help with rendering */}
-      <div className="absolute inset-0 bg-white/5"></div>
+    <main className="min-h-screen bg-[url('/background_05.jpg')] bg-cover bg-center bg-no-repeat relative">
+      {/* 60% fade overlay */}
+      <div className="absolute inset-0 bg-white/60"></div>
       
       {/* Content with proper layering */}
       <div className="relative z-10 container mx-auto px-4 py-8">
@@ -840,6 +838,6 @@ export default function CellarPage() {
           loadCellarItems()
         }}
       />
-    </div>
+    </main>
   )
 }
