@@ -743,7 +743,7 @@ export function BottleSelectorModal({ isOpen, onClose, onBottleSelected }: Bottl
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] bg-[url('/background_06.jpg')] bg-cover bg-center bg-no-repeat relative rounded-lg overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-[url('/Background_06.jpg')] bg-cover bg-center bg-no-repeat relative rounded-lg overflow-hidden">
         {/* 50% fade overlay */}
         <div className="absolute inset-0 bg-white/50"></div>
         

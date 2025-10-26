@@ -173,7 +173,7 @@ export default function CellarPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[url('/background_05.jpg')] bg-cover bg-center bg-no-repeat relative">
+    <main className="min-h-screen bg-[url('/Background_05.jpg')] bg-cover bg-center bg-no-repeat relative">
       {/* 60% fade overlay */}
       <div className="absolute inset-0 bg-white/60"></div>
       
